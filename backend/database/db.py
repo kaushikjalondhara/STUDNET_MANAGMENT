@@ -11,7 +11,14 @@ def get_db():
     global _client, _db
     if _db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
-        _client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+        kwargs = {'serverSelectionTimeoutMS': 20000}
+        if mongo_uri.startswith('mongodb+srv') or 'ssl=true' in mongo_uri.lower() or 'tls=true' in mongo_uri.lower():
+            try:
+                import certifi
+                kwargs['tlsCAFile'] = certifi.where()
+            except Exception:
+                pass
+        _client = MongoClient(mongo_uri, **kwargs)
         db_name = os.environ.get('DATABASE_NAME', 'student_management')
         _db = _client[db_name]
     return _db
