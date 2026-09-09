@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Settings — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+/* ─── Refined Teacher Portal Settings Styles ─────────────────────────── */
+
+/* Ensure full width and no empty right gap */
+.main-content {
+  flex: 1;
+  width: calc(100% - var(--sidebar-w));
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.page-content {
+  padding: 24px 28px;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Card fills full available width */
+.card.settings-card {
+  width: 100%;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  background: var(--card-bg);
+}
+
+/* Mobile Category Quick Chips */
+.mobile-cat-chips {
+  display: none;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--border);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.mobile-cat-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #F1F5F9;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.cat-chip:hover {
+  background: #EEF2FF;
+  color: var(--primary);
+}
+.cat-chip.active {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.3);
+}
+
+/* Toggle Switches */
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: background .15s, border-color .15s;
+}
+.toggle-row:hover {
+  background: #F1F5F9;
+}
+.toggle-info h4 {
+  margin: 0 0 3px 0;
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 700;
+}
+.toggle-info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #CBD5E1;
+  transition: .25s ease;
+  border-radius: 26px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .25s ease;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+input:checked + .slider {
+  background-color: var(--primary);
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Standard Fees Table */
+.fee-std-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.fee-std-table th {
+  background: #EEF2FF;
+  color: var(--primary-dark);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 2px solid #C7D2FE;
+}
+.fee-std-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.fee-std-table tr:hover {
+  background: #F8FAFC;
+}
+.fee-std-table input {
+  padding: 7px 12px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  width: 140px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fee-std-table input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+}
+
+/* Tag Lists */
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.tag-item {
+  background: #EEF2FF;
+  color: var(--primary-dark);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #C7D2FE;
+}
+.tag-item .del-tag {
+  cursor: pointer;
+  color: var(--danger);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Panels */
+.settings-panel {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+.settings-panel.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Mobile Responsiveness ─────────────────────────────── */
+@media (max-width: 900px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  .page-content {
+    padding: 16px 12px;
+  }
+  .mobile-cat-chips {
+    display: flex;
+  }
+  .top-header {
+    padding: 10px 14px;
+    height: auto;
+    min-height: 56px;
+  }
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .card-header .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  .form-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- Mobile Backdrop -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+  <!-- Dedicated School Settings Sidebar (Teacher Portal Design) -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>School Settings</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Settings Sections</div>
+      <a class="nav-link active" onclick="selectSection('school_info', this)">
+        <span class="nav-icon">🏫</span> 1. School Information
+      </a>
+      <a class="nav-link" onclick="selectSection('academic', this)">
+        <span class="nav-icon">🎓</span> 2. Academic Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('fees', this)">
+        <span class="nav-icon">💰</span> 3. Fees Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('attendance', this)">
+        <span class="nav-icon">📅</span> 4. Attendance Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('exam', this)">
+        <span class="nav-icon">📝</span> 5. Exam & Result Rules
+      </a>
+      <a class="nav-link" onclick="selectSection('timetable', this)">
+        <span class="nav-icon">🕐</span> 6. Timetable Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('homework', this)">
+        <span class="nav-icon">📚</span> 7. Homework Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('notifications', this)">
+        <span class="nav-icon">🔔</span> 8. Notification Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('notices', this)">
+        <span class="nav-icon">📢</span> 9. Notice Settings
+      </a>
+      <a class="nav-link" onclick="selectSection('general', this)">
+        <span class="nav-icon">📄</span> 10. General Settings
+      </a>
+
+      <div class="nav-section-label" style="margin-top:14px">Management Security</div>
+      <a class="nav-link" onclick="selectSection('security', this)">
+        <span class="nav-icon">🔐</span> Change Password
+      </a>
+
+      <div class="nav-section-label" style="margin-top:14px">Navigation</div>
+      <a href="select-standard.html" class="nav-link">
+        <span class="nav-icon">📚</span> Select Standard
+      </a>
+      <a class="nav-link logout" onclick="lockSettingsSession()">
+        <span class="nav-icon">🔒</span> Lock & Exit
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">M</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Management</div>
+          <div class="teacher-role">School Administrator</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content (Full Width, Teacher Portal Standard) -->
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left" style="display:flex;align-items:center;gap:10px">
+        <button class="mobile-nav-toggle" onclick="toggleSidebar()" aria-label="Toggle Navigation">☰</button>
+        <div>
+          <h1 id="topHeaderTitle">⚙️ School Settings</h1>
+          <div class="breadcrumb" id="topHeaderDesc">Configure institutional rules, academic calendar, fees & notifications</div>
+        </div>
+      </div>
+      <div class="header-right" style="display:flex;align-items:center;gap:8px">
+        <a href="select-standard.html" class="btn btn-outline btn-sm">📚 Select Standard</a>
+        <button class="btn btn-danger btn-sm" onclick="lockSettingsSession()">🔒 Lock & Exit</button>
+      </div>
+    </header>
+
+    <!-- Mobile Horizontal Category Chips Bar -->
+    <div class="mobile-cat-chips">
+      <div class="cat-chip active" onclick="selectSection('school_info', this)">🏫 1. School Info</div>
+      <div class="cat-chip" onclick="selectSection('academic', this)">🎓 2. Academic</div>
+      <div class="cat-chip" onclick="selectSection('fees', this)">💰 3. Fees</div>
+      <div class="cat-chip" onclick="selectSection('attendance', this)">📅 4. Attendance</div>
+      <div class="cat-chip" onclick="selectSection('exam', this)">📝 5. Exams</div>
+      <div class="cat-chip" onclick="selectSection('timetable', this)">🕐 6. Timetable</div>
+      <div class="cat-chip" onclick="selectSection('homework', this)">📚 7. Homework</div>
+      <div class="cat-chip" onclick="selectSection('notifications', this)">🔔 8. Notifications</div>
+      <div class="cat-chip" onclick="selectSection('notices', this)">📢 9. Notices</div>
+      <div class="cat-chip" onclick="selectSection('general', this)">📄 10. General</div>
+      <div class="cat-chip" onclick="selectSection('security', this)">🔐 Password</div>
+    </div>
+
+    <!-- Page Content (Full Width Card) -->
+    <div class="page-content">
+
+      <!-- 1. School Information -->
+      <div class="settings-panel active" id="panel-school_info">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">🏫 School Information</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Manage school official profile, contact details and branding</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('school_info')">💾 Save School Info</button>
+          </div>
+          <div class="card-body">
+            <form id="form-school_info" onsubmit="event.preventDefault(); saveCategory('school_info')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">School Official Name *</label>
+                  <input type="text" class="form-control" id="si_name" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Academic Year</label>
+                  <input type="text" class="form-control" id="si_academic_year" placeholder="e.g. 2026-2027">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Contact Mobile / Phone *</label>
+                  <input type="text" class="form-control" id="si_mobile" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Official Email Address *</label>
+                  <input type="email" class="form-control" id="si_email" required>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Official Website</label>
+                  <input type="url" class="form-control" id="si_website" placeholder="https://edumanagepro.edu">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">School Logo URL / Path</label>
+                  <input type="text" class="form-control" id="si_logo" placeholder="/css/school-logo.png">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">School Full Address</label>
+                <textarea class="form-control" id="si_address" rows="3"></textarea>
+              </div>
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Academic Settings -->
+      <div class="settings-panel" id="panel-academic">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">🎓 Academic Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure academic year, standards (1 to 12), divisions, and subjects</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('academic')">💾 Save Academic</button>
+          </div>
+          <div class="card-body">
+            <form id="form-academic" onsubmit="event.preventDefault(); saveCategory('academic')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Active Academic Year</label>
+                  <input type="text" class="form-control" id="acad_year" placeholder="2026-2027">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Configured Divisions (Comma separated)</label>
+                  <input type="text" class="form-control" id="acad_divisions" placeholder="A, B, C">
+                </div>
+              </div>
+
+              <!-- Subject Management -->
+              <div class="form-group" style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px">
+                <label class="form-label" style="color:var(--primary-dark)">📚 Subject Catalog (Add / Delete Subjects)</label>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input type="text" class="form-control" id="newSubjectInput" placeholder="Enter new subject name…" style="flex:1">
+                  <button type="button" class="btn btn-success btn-sm" onclick="addSubject()">➕ Add Subject</button>
+                </div>
+                <div class="tag-list" id="subjectTagList"></div>
+              </div>
+
+              <!-- Exam Types Management -->
+              <div class="form-group" style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px">
+                <label class="form-label" style="color:var(--primary-dark)">📝 Recognized Exam Types</label>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input type="text" class="form-control" id="newExamTypeInput" placeholder="Enter exam type (e.g. Unit Test 1)…" style="flex:1">
+                  <button type="button" class="btn btn-success btn-sm" onclick="addExamType()">➕ Add Exam Type</button>
+                </div>
+                <div class="tag-list" id="examTypeTagList"></div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Academic Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Fees Settings -->
+      <div class="settings-panel" id="panel-fees">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">💰 Fees Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Set standard-wise fees (1-12), breakdown heads, due dates, and discount rules</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('fees')">💾 Save Fees Config</button>
+          </div>
+          <div class="card-body">
+            <form id="form-fees" onsubmit="event.preventDefault(); saveCategory('fees')">
+              <div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:13px;color:#92400E">
+                ⚡ <b>Automatic Standard Assignment:</b> Whenever a student belongs to or is enrolled in a standard, the fee structure below is automatically applied to them!
+              </div>
+
+              <h4 style="font-size:14px;color:var(--text);margin-bottom:10px;font-weight:700">📊 Standard-wise Fee Rates (Standards 1 to 12)</h4>
+              <div class="table-wrap" style="margin-bottom:20px">
+                <table class="fee-std-table">
+                  <thead>
+                    <tr>
+                      <th style="width:140px">Standard</th>
+                      <th style="width:190px">Annual Total Fee (₹)</th>
+                      <th>Sample Breakdown (Tuition 60%, Comp 15%, Exam 10%, Other 15%)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stdFeeTableBody">
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Annual Fee Payment Due Date</label>
+                  <input type="date" class="form-control" id="fee_due_date">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Late Fee Amount (₹)</label>
+                  <input type="number" class="form-control" id="fee_late_fee" min="0">
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Installment Policy</label>
+                  <input type="text" class="form-control" id="fee_installments" placeholder="Quarterly (4 Installments) or One-time">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Concession & Discount Rules</label>
+                  <input type="text" class="form-control" id="fee_discount" placeholder="5% sibling concession, 10% lump-sum prepayment">
+                </div>
+              </div>
+
+              <!-- Centralized UPI & Payment Gateway Settings -->
+              <div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:16px;margin-top:16px">
+                <h4 style="font-size:14px;color:#166534;margin:0 0 4px 0;font-weight:700">📱 UPI & Payment Gateway Configuration</h4>
+                <div style="font-size:12px;color:#15803d;margin-bottom:14px">
+                  Configure school bank account UPI and payment gateways. All student fees paid through QR codes and UPI apps will route directly to this beneficiary.
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">School Official UPI ID (VPA) *</label>
+                    <input type="text" class="form-control" id="fee_upi_id" placeholder="e.g. schoolfees@oksbi or 9876543210@paytm">
+                    <small style="color:var(--text-muted);font-size:11px">Dynamic QR codes and direct UPI links are generated with this ID.</small>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Payee / Beneficiary Name *</label>
+                    <input type="text" class="form-control" id="fee_payee_name" placeholder="e.g. gyan jyot vidhaya bhavan">
+                    <small style="color:var(--text-muted);font-size:11px">Official account name displayed to parents and students in UPI apps.</small>
+                  </div>
+                </div>
+
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Merchant / Business Name (Optional)</label>
+                    <input type="text" class="form-control" id="fee_merchant_name" placeholder="School registered business name">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Merchant Category Code (MCC)</label>
+                    <input type="text" class="form-control" id="fee_merchant_code" placeholder="e.g. 8211 (Schools & Educational Services)">
+                  </div>
+                </div>
+
+                <div class="form-group" style="margin-top:10px">
+                  <label class="form-label">Razorpay Key ID (Optional for NetBanking/Cards)</label>
+                  <input type="text" class="form-control" id="fee_razorpay_key" placeholder="rzp_test_... or rzp_live_...">
+                </div>
+
+                <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px dashed #BBF7D0">
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text)">
+                    <input type="checkbox" id="fee_enable_upi" checked style="width:16px;height:16px"> Enable UPI & Dynamic QR Code Payments
+                  </label>
+                  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text)">
+                    <input type="checkbox" id="fee_enable_razorpay" style="width:16px;height:16px"> Enable Razorpay Gateway
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Fees Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Attendance Settings -->
+      <div class="settings-panel" id="panel-attendance">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📅 Attendance Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Define attendance codes, late arrival calculations, and minimum attendance criteria</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('attendance')">💾 Save Attendance</button>
+          </div>
+          <div class="card-body">
+            <form id="form-attendance" onsubmit="event.preventDefault(); saveCategory('attendance')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Present Code</label>
+                  <input type="text" class="form-control" id="att_present" value="P" maxlength="2">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Absent Code</label>
+                  <input type="text" class="form-control" id="att_absent" value="A" maxlength="2">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Late Arrival Code</label>
+                  <input type="text" class="form-control" id="att_late" value="L" maxlength="2">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Half Day Code</label>
+                  <input type="text" class="form-control" id="att_half_day" value="H" maxlength="2">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Late Arrival Conversion Rule</label>
+                  <input type="text" class="form-control" id="att_late_rule" placeholder="3 late arrivals equal 1 absence">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Minimum Attendance Percentage Required (%)</label>
+                  <input type="number" class="form-control" id="att_min_pct" min="50" max="100" value="75">
+                </div>
+              </div>
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Attendance Rules</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. Exam & Result Settings -->
+      <div class="settings-panel" id="panel-exam">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📝 Exam & Result Rules</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Set default maximum marks, passing marks, and grade thresholds</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('exam')">💾 Save Exam Rules</button>
+          </div>
+          <div class="card-body">
+            <form id="form-exam" onsubmit="event.preventDefault(); saveCategory('exam')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Default Maximum Marks</label>
+                  <input type="number" class="form-control" id="exam_max_marks" value="100">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Passing Marks Threshold</label>
+                  <input type="number" class="form-control" id="exam_pass_marks" value="35">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Percentage Rounding & Calculation Rule</label>
+                <input type="text" class="form-control" id="exam_pct_rule" value="Standard Rounding to 1 Decimal">
+              </div>
+
+              <h4 style="font-size:14px;color:var(--text);margin:20px 0 10px 0;font-weight:700">🏆 Grading Scale System</h4>
+              <div style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;font-size:13px;line-height:1.9">
+                <div><span class="badge badge-success">A+</span> <b>90% and above</b> — Outstanding</div>
+                <div><span class="badge badge-success">A</span> <b>80% to 89%</b> — Excellent</div>
+                <div><span class="badge badge-info">B+</span> <b>70% to 79%</b> — Very Good</div>
+                <div><span class="badge badge-info">B</span> <b>60% to 69%</b> — Good</div>
+                <div><span class="badge badge-warning">C</span> <b>50% to 59%</b> — Satisfactory</div>
+                <div><span class="badge badge-warning">D</span> <b>35% to 49%</b> — Pass</div>
+                <div><span class="badge badge-danger">F</span> <b>Below 35%</b> — Needs Improvement</div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Exam Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Timetable Settings -->
+      <div class="settings-panel" id="panel-timetable">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">🕐 Timetable Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure daily school timing, period duration, lunch break, and total periods</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('timetable')">💾 Save Timetable</button>
+          </div>
+          <div class="card-body">
+            <form id="form-timetable" onsubmit="event.preventDefault(); saveCategory('timetable')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">School Start Time</label>
+                  <input type="time" class="form-control" id="tt_start_time" value="08:00">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">School End Time</label>
+                  <input type="time" class="form-control" id="tt_end_time" value="14:00">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Period Duration (Minutes)</label>
+                  <input type="number" class="form-control" id="tt_period_mins" value="45" min="20" max="90">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Total Number of Periods per Day</label>
+                  <input type="number" class="form-control" id="tt_periods_per_day" value="7" min="3" max="10">
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Lunch Break Start</label>
+                  <input type="time" class="form-control" id="tt_lunch_start" value="11:30">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Lunch Break End</label>
+                  <input type="time" class="form-control" id="tt_lunch_end" value="12:00">
+                </div>
+              </div>
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Timetable</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Homework Settings -->
+      <div class="settings-panel" id="panel-homework">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📚 Homework Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure assignment categories, default submission deadlines, and grace periods</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('homework')">💾 Save Homework</button>
+          </div>
+          <div class="card-body">
+            <form id="form-homework" onsubmit="event.preventDefault(); saveCategory('homework')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Default Due Days (Days after assignment)</label>
+                  <input type="number" class="form-control" id="hw_due_days" value="1" min="1" max="30">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Submission Deadline Rule</label>
+                  <input type="text" class="form-control" id="hw_rules" value="Must be submitted before 09:00 AM on due date">
+                </div>
+              </div>
+
+              <div class="form-group" style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px">
+                <label class="form-label" style="color:var(--primary-dark)">📁 Homework Categories</label>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input type="text" class="form-control" id="newHwCatInput" placeholder="Add category (e.g. Science Project)…" style="flex:1">
+                  <button type="button" class="btn btn-success btn-sm" onclick="addHwCat()">➕ Add</button>
+                </div>
+                <div class="tag-list" id="hwCatTagList"></div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Homework Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Notification Settings -->
+      <div class="settings-panel" id="panel-notifications">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">🔔 Notification Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Control automated triggers and student notifications across the entire portal</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('notifications')">💾 Save Notifications</button>
+          </div>
+          <div class="card-body">
+            <form id="form-notifications" onsubmit="event.preventDefault(); saveCategory('notifications')">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📅 Attendance Notification</h4>
+                  <p>Send notification to students when daily attendance is marked.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_attendance"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📚 Homework Notification</h4>
+                  <p>Alert students whenever new homework or assignment is assigned.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_homework"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📖 Study Notes Notification</h4>
+                  <p>Notify students when new chapter notes or study materials are uploaded.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_notes"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📢 Notice Board Notification</h4>
+                  <p>Send instant alert when a school announcement or notice is published.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_notice"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📝 Exam Results Notification</h4>
+                  <p>Notify students immediately when exam marks or report cards are declared.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_result"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>📨 Leave Application Notification</h4>
+                  <p>Alert students when their submitted leave request is Approved or Rejected.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_leave"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>🔔 Fee Reminder Notification</h4>
+                  <p>Broadcast automated fee payment reminders to pending fee accounts.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_fee_reminder"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>💰 Fee Payment Successful Notification</h4>
+                  <p>Notify students upon receipt of fee payment (UPI / Razorpay / Cash).</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_payment"><span class="slider"></span></label>
+              </div>
+
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>🖨️ Fee Receipt Notification</h4>
+                  <p>Provide downloadable receipt reference directly in student notifications.</p>
+                </div>
+                <label class="switch"><input type="checkbox" id="notif_receipt"><span class="slider"></span></label>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Notification Toggles</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Notice Settings -->
+      <div class="settings-panel" id="panel-notices">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📢 Notice Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure notice board defaults, priorities, and default expiry periods</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('notices')">💾 Save Notice Rules</button>
+          </div>
+          <div class="card-body">
+            <form id="form-notices" onsubmit="event.preventDefault(); saveCategory('notices')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Default Notice Expiry Period (Days)</label>
+                  <input type="number" class="form-control" id="notice_expiry" value="15" min="1" max="90">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Default Target Standard</label>
+                  <input type="text" class="form-control" id="notice_target_std" value="All Standards (1 to 12)">
+                </div>
+              </div>
+
+              <div class="form-group" style="background:#F8FAFC;border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:14px">
+                <label class="form-label" style="color:var(--primary-dark)">🏷️ Notice Categories</label>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <input type="text" class="form-control" id="newNoticeCatInput" placeholder="Add category (e.g. Sports Gala)…" style="flex:1">
+                  <button type="button" class="btn btn-success btn-sm" onclick="addNoticeCat()">➕ Add</button>
+                </div>
+                <div class="tag-list" id="noticeCatTagList"></div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save Notice Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. General Settings -->
+      <div class="settings-panel" id="panel-general">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📄 General Settings</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Configure system date formats, time display, currency symbols, and working days</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveCategory('general')">💾 Save General</button>
+          </div>
+          <div class="card-body">
+            <form id="form-general" onsubmit="event.preventDefault(); saveCategory('general')">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Date Format</label>
+                  <select class="form-control" id="gen_date_format">
+                    <option value="DD/MM/YYYY">DD/MM/YYYY (e.g. 09/09/2026)</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-09-09)</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 09/09/2026)</option>
+                    <option value="DD-MMM-YYYY">DD-MMM-YYYY (e.g. 09-Sep-2026)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Time Format</label>
+                  <select class="form-control" id="gen_time_format">
+                    <option value="12-Hour (AM/PM)">12-Hour (AM/PM)</option>
+                    <option value="24-Hour">24-Hour</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Currency Symbol</label>
+                  <input type="text" class="form-control" id="gen_currency" value="₹">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Receipt Number Prefix</label>
+                  <input type="text" class="form-control" id="gen_receipt_prefix" value="REC-2026-">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">School Working Days</label>
+                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px">
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_mon" checked> Mon</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_tue" checked> Tue</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_wed" checked> Wed</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_thu" checked> Thu</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_fri" checked> Fri</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_sat" checked> Sat</label>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" id="wd_sun"> Sun</label>
+                </div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadSettings()">🔄 Reset</button>
+                <button type="submit" class="btn btn-primary">💾 Save General Settings</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. Management Password Security -->
+      <div class="settings-panel" id="panel-security">
+        <div class="card settings-card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">🔐 Management Password Security</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Update the protected management password required to access school settings</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <form id="form-security" onsubmit="event.preventDefault(); changePassword()">
+              <div style="background:#EEF2FF;border:1px solid #C7D2FE;border-radius:8px;padding:14px;margin-bottom:18px;font-size:13px;color:var(--primary-dark)">
+                🛡️ <b>Security Notice:</b> The Management Password secures all institutional configurations and fee policies. Keep it safe and never share it publicly.
+              </div>
+
+              <div class="form-group" style="max-width:440px">
+                <label class="form-label">Current Management Password *</label>
+                <input type="password" class="form-control" id="sec_old_password" required placeholder="Enter current password">
+              </div>
+
+              <div class="form-grid" style="max-width:700px">
+                <div class="form-group">
+                  <label class="form-label">New Management Password *</label>
+                  <input type="password" class="form-control" id="sec_new_password" required placeholder="Min 4 characters">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm New Password *</label>
+                  <input type="password" class="form-control" id="sec_confirm_password" required placeholder="Re-enter new password">
+                </div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-start;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="submit" class="btn btn-danger">🔑 Update Management Password</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  // Auth guard: Teacher login required
+  if (!Auth.requireTeacher()) { /* redirected */ }
+
+  // Security guard: Must have valid management token from select-standard.html!
+  const existingToken = sessionStorage.getItem('sms_mgmt_token');
+  if (!existingToken) {
+    alert('Management Password Required! Redirecting to Select Standard…');
+    window.location.href = 'select-standard.html';
+  }
+
+  let cachedSettings = {};
+
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+    document.getElementById('sidebarBackdrop').classList.toggle('open');
+  }
+
+  function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarBackdrop').classList.remove('open');
+  }
+
+  function lockSettingsSession() {
+    sessionStorage.removeItem('sms_mgmt_token');
+    window.location.href = 'select-standard.html';
+  }
+
+  function selectSection(category, triggerEl) {
+    // Update sidebar nav items
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.mobile-cat-chips .cat-chip').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.settings-panel').forEach(el => el.classList.remove('active'));
+
+    // Highlight matching sidebar link
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(el => {
+      if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(category)) {
+        el.classList.add('active');
+      }
+    });
+
+    // Highlight matching mobile chip
+    document.querySelectorAll('.mobile-cat-chips .cat-chip').forEach(el => {
+      if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(category)) {
+        el.classList.add('active');
+        el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    });
+
+    const panel = document.getElementById(`panel-${category}`);
+    if (panel) panel.classList.add('active');
+
+    // Close mobile sidebar if open
+    closeSidebar();
+
+    // Scroll to top of content
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function loadSettings() {
+    const { ok, data } = await Api.getSchoolSettings();
+    if (!ok || !data?.settings) {
+      Toast.error('Failed to load school settings.');
+      return;
+    }
+
+    cachedSettings = data.settings;
+    populateAllPanels(cachedSettings);
+  }
+
+  function populateAllPanels(s) {
+    // 1. School Info
+    const si = s.school_info || {};
+    document.getElementById('si_name').value = si.name || '';
+    document.getElementById('si_academic_year').value = si.academic_year || '';
+    document.getElementById('si_mobile').value = si.mobile || '';
+    document.getElementById('si_email').value = si.email || '';
+    document.getElementById('si_website').value = si.website || '';
+    document.getElementById('si_logo').value = si.logo || '';
+    document.getElementById('si_address').value = si.address || '';
+
+    // 2. Academic
+    const acad = s.academic || {};
+    document.getElementById('acad_year').value = acad.academic_year || '';
+    document.getElementById('acad_divisions').value = (acad.divisions || []).join(', ');
+    renderSubjectTags(acad.subjects || []);
+    renderExamTypeTags(acad.exam_types || []);
+
+    // 3. Fees
+    const fees = s.fees || {};
+    renderStandardFeeTable(fees.standard_fees || {});
+    document.getElementById('fee_due_date').value = fees.due_date || '2026-10-31';
+    document.getElementById('fee_late_fee').value = fees.late_fee || 200;
+    document.getElementById('fee_installments').value = fees.installments || '';
+    document.getElementById('fee_discount').value = fees.discount || '';
+    document.getElementById('fee_upi_id').value = fees.upi_id || '';
+    document.getElementById('fee_payee_name').value = fees.payee_name || (si.name || '');
+    document.getElementById('fee_merchant_name').value = fees.merchant_name || (si.name || '');
+    document.getElementById('fee_merchant_code').value = fees.merchant_code || '8211';
+    document.getElementById('fee_razorpay_key').value = fees.razorpay_key_id || '';
+    document.getElementById('fee_enable_upi').checked = fees.enable_upi !== false;
+    document.getElementById('fee_enable_razorpay').checked = !!fees.enable_razorpay;
+
+    // 4. Attendance
+    const att = s.attendance || {};
+    document.getElementById('att_present').value = att.present_code || 'P';
+    document.getElementById('att_absent').value = att.absent_code || 'A';
+    document.getElementById('att_late').value = att.late_code || 'L';
+    document.getElementById('att_half_day').value = att.half_day_code || 'H';
+    document.getElementById('att_late_rule').value = att.late_rule || '';
+    document.getElementById('att_min_pct').value = att.min_attendance_pct || 75;
+
+    // 5. Exam
+    const exam = s.exam || {};
+    document.getElementById('exam_max_marks').value = exam.max_marks || 100;
+    document.getElementById('exam_pass_marks').value = exam.passing_marks || 35;
+    document.getElementById('exam_pct_rule').value = exam.percentage_rule || '';
+
+    // 6. Timetable
+    const tt = s.timetable || {};
+    document.getElementById('tt_start_time').value = tt.start_time || '08:00';
+    document.getElementById('tt_end_time').value = tt.end_time || '14:00';
+    document.getElementById('tt_period_mins').value = tt.period_duration_mins || 45;
+    document.getElementById('tt_periods_per_day').value = tt.periods_per_day || 7;
+    document.getElementById('tt_lunch_start').value = tt.lunch_break_start || '11:30';
+    document.getElementById('tt_lunch_end').value = tt.lunch_break_end || '12:00';
+
+    // 7. Homework
+    const hw = s.homework || {};
+    document.getElementById('hw_due_days').value = hw.default_due_days || 1;
+    document.getElementById('hw_rules').value = hw.submission_rules || '';
+    renderHwCatTags(hw.categories || []);
+
+    // 8. Notifications
+    const notif = s.notifications || {};
+    document.getElementById('notif_attendance').checked = notif.attendance !== false;
+    document.getElementById('notif_homework').checked = notif.homework !== false;
+    document.getElementById('notif_notes').checked = notif.notes !== false;
+    document.getElementById('notif_notice').checked = notif.notice !== false;
+    document.getElementById('notif_result').checked = notif.result !== false;
+    document.getElementById('notif_leave').checked = notif.leave !== false;
+    document.getElementById('notif_fee_reminder').checked = notif.fee_reminder !== false;
+    document.getElementById('notif_payment').checked = notif.payment !== false;
+    document.getElementById('notif_receipt').checked = notif.receipt !== false;
+
+    // 9. Notices
+    const notices = s.notices || {};
+    document.getElementById('notice_expiry').value = notices.default_expiry_days || 15;
+    document.getElementById('notice_target_std').value = notices.target_standard || '';
+    renderNoticeCatTags(notices.categories || []);
+
+    // 10. General
+    const gen = s.general || {};
+    document.getElementById('gen_date_format').value = gen.date_format || 'DD/MM/YYYY';
+    document.getElementById('gen_time_format').value = gen.time_format || '12-Hour (AM/PM)';
+    document.getElementById('gen_currency').value = gen.currency || '₹';
+    document.getElementById('gen_receipt_prefix').value = gen.receipt_prefix || 'REC-2026-';
+
+    const wdays = gen.working_days || [];
+    document.getElementById('wd_mon').checked = wdays.includes('Monday');
+    document.getElementById('wd_tue').checked = wdays.includes('Tuesday');
+    document.getElementById('wd_wed').checked = wdays.includes('Wednesday');
+    document.getElementById('wd_thu').checked = wdays.includes('Thursday');
+    document.getElementById('wd_fri').checked = wdays.includes('Friday');
+    document.getElementById('wd_sat').checked = wdays.includes('Saturday');
+    document.getElementById('wd_sun').checked = wdays.includes('Sunday');
+  }
+
+  // ─── Tags Handlers ────────────────────────────────────────────────────────
+  let currentSubjects = [];
+  function renderSubjectTags(subs) {
+    currentSubjects = [...subs];
+    const el = document.getElementById('subjectTagList');
+    el.innerHTML = currentSubjects.map((s, idx) => `
+      <span class="tag-item">
+        ${s} <span class="del-tag" onclick="removeSubject(${idx})">✕</span>
+      </span>
+    `).join('');
+  }
+  function addSubject() {
+    const input = document.getElementById('newSubjectInput');
+    const val = input.value.trim();
+    if (val && !currentSubjects.includes(val)) {
+      currentSubjects.push(val);
+      renderSubjectTags(currentSubjects);
+      input.value = '';
+    }
+  }
+  function removeSubject(idx) {
+    currentSubjects.splice(idx, 1);
+    renderSubjectTags(currentSubjects);
+  }
+
+  let currentExamTypes = [];
+  function renderExamTypeTags(types) {
+    currentExamTypes = [...types];
+    const el = document.getElementById('examTypeTagList');
+    el.innerHTML = currentExamTypes.map((t, idx) => `
+      <span class="tag-item">
+        ${t} <span class="del-tag" onclick="removeExamType(${idx})">✕</span>
+      </span>
+    `).join('');
+  }
+  function addExamType() {
+    const input = document.getElementById('newExamTypeInput');
+    const val = input.value.trim();
+    if (val && !currentExamTypes.includes(val)) {
+      currentExamTypes.push(val);
+      renderExamTypeTags(currentExamTypes);
+      input.value = '';
+    }
+  }
+  function removeExamType(idx) {
+    currentExamTypes.splice(idx, 1);
+    renderExamTypeTags(currentExamTypes);
+  }
+
+  let currentHwCats = [];
+  function renderHwCatTags(cats) {
+    currentHwCats = [...cats];
+    const el = document.getElementById('hwCatTagList');
+    el.innerHTML = currentHwCats.map((c, idx) => `
+      <span class="tag-item">
+        ${c} <span class="del-tag" onclick="removeHwCat(${idx})">✕</span>
+      </span>
+    `).join('');
+  }
+  function addHwCat() {
+    const input = document.getElementById('newHwCatInput');
+    const val = input.value.trim();
+    if (val && !currentHwCats.includes(val)) {
+      currentHwCats.push(val);
+      renderHwCatTags(currentHwCats);
+      input.value = '';
+    }
+  }
+  function removeHwCat(idx) {
+    currentHwCats.splice(idx, 1);
+    renderHwCatTags(currentHwCats);
+  }
+
+  let currentNoticeCats = [];
+  function renderNoticeCatTags(cats) {
+    currentNoticeCats = [...cats];
+    const el = document.getElementById('noticeCatTagList');
+    el.innerHTML = currentNoticeCats.map((c, idx) => `
+      <span class="tag-item">
+        ${c} <span class="del-tag" onclick="removeNoticeCat(${idx})">✕</span>
+      </span>
+    `).join('');
+  }
+  function addNoticeCat() {
+    const input = document.getElementById('newNoticeCatInput');
+    const val = input.value.trim();
+    if (val && !currentNoticeCats.includes(val)) {
+      currentNoticeCats.push(val);
+      renderNoticeCatTags(currentNoticeCats);
+      input.value = '';
+    }
+  }
+  function removeNoticeCat(idx) {
+    currentNoticeCats.splice(idx, 1);
+    renderNoticeCatTags(currentNoticeCats);
+  }
+
+  // ─── Standard Fee Table ────────────────────────────────────────────────────
+  function renderStandardFeeTable(stdFees) {
+    const tbody = document.getElementById('stdFeeTableBody');
+    let rows = '';
+    for (let std = 1; std <= 12; std++) {
+      const defaultAmt = 15000 + (std - 1) * 1000 + (std > 4 ? 2000 : 0);
+      const amt = stdFees[String(std)] || defaultAmt;
+      const tuit = Math.round(amt * 0.60);
+      const comp = Math.round(amt * 0.15);
+      const exam = Math.round(amt * 0.10);
+      const oth = amt - tuit - comp - exam;
+
+      rows += `
+        <tr>
+          <td><b style="color:var(--text)">Standard ${std}</b></td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-weight:700;color:var(--text-muted)">₹</span>
+              <input type="number" id="std_fee_${std}" value="${amt}" min="1000" step="500">
+            </div>
+          </td>
+          <td style="color:var(--text-muted);font-size:12px">
+            Tuition: ₹${tuit.toLocaleString('en-IN')} | Comp: ₹${comp.toLocaleString('en-IN')} | Exam: ₹${exam.toLocaleString('en-IN')} | Other: ₹${oth.toLocaleString('en-IN')}
+          </td>
+        </tr>
+      `;
+    }
+    tbody.innerHTML = rows;
+  }
+
+  // ─── Save Category Data ────────────────────────────────────────────────────
+  async function saveCategory(category) {
+    let payload = {};
+
+    if (category === 'school_info') {
+      payload = {
+        name: document.getElementById('si_name').value.trim(),
+        academic_year: document.getElementById('si_academic_year').value.trim(),
+        mobile: document.getElementById('si_mobile').value.trim(),
+        email: document.getElementById('si_email').value.trim(),
+        website: document.getElementById('si_website').value.trim(),
+        logo: document.getElementById('si_logo').value.trim(),
+        address: document.getElementById('si_address').value.trim()
+      };
+    } else if (category === 'academic') {
+      const divs = document.getElementById('acad_divisions').value.split(',').map(s => s.trim()).filter(Boolean);
+      payload = {
+        academic_year: document.getElementById('acad_year').value.trim(),
+        divisions: divs.length ? divs : ['A', 'B'],
+        subjects: currentSubjects,
+        exam_types: currentExamTypes
+      };
+    } else if (category === 'fees') {
+      const stdFees = {};
+      for (let std = 1; std <= 12; std++) {
+        const inp = document.getElementById(`std_fee_${std}`);
+        stdFees[String(std)] = Number(inp ? inp.value : 20000);
+      }
+      payload = {
+        standard_fees: stdFees,
+        due_date: document.getElementById('fee_due_date').value,
+        late_fee: Number(document.getElementById('fee_late_fee').value || 0),
+        installments: document.getElementById('fee_installments').value.trim(),
+        discount: document.getElementById('fee_discount').value.trim(),
+        upi_id: document.getElementById('fee_upi_id').value.trim(),
+        payee_name: document.getElementById('fee_payee_name').value.trim(),
+        merchant_name: document.getElementById('fee_merchant_name').value.trim(),
+        merchant_code: document.getElementById('fee_merchant_code').value.trim(),
+        razorpay_key_id: document.getElementById('fee_razorpay_key').value.trim(),
+        enable_upi: document.getElementById('fee_enable_upi').checked,
+        enable_razorpay: document.getElementById('fee_enable_razorpay').checked
+      };
+    } else if (category === 'attendance') {
+      payload = {
+        present_code: document.getElementById('att_present').value.trim(),
+        absent_code: document.getElementById('att_absent').value.trim(),
+        late_code: document.getElementById('att_late').value.trim(),
+        half_day_code: document.getElementById('att_half_day').value.trim(),
+        late_rule: document.getElementById('att_late_rule').value.trim(),
+        min_attendance_pct: Number(document.getElementById('att_min_pct').value || 75)
+      };
+    } else if (category === 'exam') {
+      payload = {
+        max_marks: Number(document.getElementById('exam_max_marks').value || 100),
+        passing_marks: Number(document.getElementById('exam_pass_marks').value || 35),
+        percentage_rule: document.getElementById('exam_pct_rule').value.trim()
+      };
+    } else if (category === 'timetable') {
+      payload = {
+        start_time: document.getElementById('tt_start_time').value,
+        end_time: document.getElementById('tt_end_time').value,
+        period_duration_mins: Number(document.getElementById('tt_period_mins').value || 45),
+        periods_per_day: Number(document.getElementById('tt_periods_per_day').value || 7),
+        lunch_break_start: document.getElementById('tt_lunch_start').value,
+        lunch_break_end: document.getElementById('tt_lunch_end').value
+      };
+    } else if (category === 'homework') {
+      payload = {
+        default_due_days: Number(document.getElementById('hw_due_days').value || 1),
+        submission_rules: document.getElementById('hw_rules').value.trim(),
+        categories: currentHwCats
+      };
+    } else if (category === 'notifications') {
+      payload = {
+        attendance: document.getElementById('notif_attendance').checked,
+        homework: document.getElementById('notif_homework').checked,
+        notes: document.getElementById('notif_notes').checked,
+        notice: document.getElementById('notif_notice').checked,
+        result: document.getElementById('notif_result').checked,
+        leave: document.getElementById('notif_leave').checked,
+        fee_reminder: document.getElementById('notif_fee_reminder').checked,
+        payment: document.getElementById('notif_payment').checked,
+        receipt: document.getElementById('notif_receipt').checked
+      };
+    } else if (category === 'notices') {
+      payload = {
+        default_expiry_days: Number(document.getElementById('notice_expiry').value || 15),
+        target_standard: document.getElementById('notice_target_std').value.trim(),
+        categories: currentNoticeCats
+      };
+    } else if (category === 'general') {
+      const days = [];
+      if (document.getElementById('wd_mon').checked) days.push('Monday');
+      if (document.getElementById('wd_tue').checked) days.push('Tuesday');
+      if (document.getElementById('wd_wed').checked) days.push('Wednesday');
+      if (document.getElementById('wd_thu').checked) days.push('Thursday');
+      if (document.getElementById('wd_fri').checked) days.push('Friday');
+      if (document.getElementById('wd_sat').checked) days.push('Saturday');
+      if (document.getElementById('wd_sun').checked) days.push('Sunday');
+
+      payload = {
+        date_format: document.getElementById('gen_date_format').value,
+        time_format: document.getElementById('gen_time_format').value,
+        currency: document.getElementById('gen_currency').value.trim(),
+        receipt_prefix: document.getElementById('gen_receipt_prefix').value.trim(),
+        working_days: days
+      };
+    }
+
+    const { ok, data } = await Api.updateSchoolSettings(category, payload);
+    if (ok) {
+      Toast.success(data.message || 'Settings saved successfully!');
+      if (data?.settings) {
+        cachedSettings = data.settings;
+        if (category === 'school_info' && data.settings.school_info) {
+          if (typeof SchoolBranding !== 'undefined') {
+            SchoolBranding.setStored(data.settings.school_info);
+            SchoolBranding.apply(data.settings.school_info);
+          }
+        }
+      }
+    } else {
+      if (data?.error && data.error.includes('Management authorization')) {
+        lockSettingsSession();
+      }
+      Toast.error(data?.error || 'Failed to update settings.');
+    }
+  }
+
+  // ─── Change Password ───────────────────────────────────────────────────────
+  async function changePassword() {
+    const oldP = document.getElementById('sec_old_password').value.trim();
+    const newP = document.getElementById('sec_new_password').value.trim();
+    const confP = document.getElementById('sec_confirm_password').value.trim();
+
+    if (!oldP || !newP) {
+      Toast.error('Please fill in both current and new passwords.');
+      return;
+    }
+
+    if (newP !== confP) {
+      Toast.error('New password and confirmation do not match.');
+      return;
+    }
+
+    const { ok, data } = await Api.changeManagementPassword(oldP, newP, confP);
+    if (ok) {
+      Toast.success(data.message || 'Password updated! Please enter new password next time.');
+      document.getElementById('sec_old_password').value = '';
+      document.getElementById('sec_new_password').value = '';
+      document.getElementById('sec_confirm_password').value = '';
+      setTimeout(() => lockSettingsSession(), 1200);
+    } else {
+      Toast.error(data?.error || 'Failed to change password.');
+    }
+  }
+
+  // Initial load
+  loadSettings();
+</script>
+</body>
+</html>

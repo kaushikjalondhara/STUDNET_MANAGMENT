@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Select Standard — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+  @media (max-width: 600px) {
+    .select-std-header h1 { font-size: 22px; }
+    .select-std-header p { font-size: 13px; }
+    .school-mgmt-card { flex-direction: column; align-items: stretch !important; }
+    .school-mgmt-card button { width: 100%; justify-content: center; min-height: 44px; }
+  }
+  @media (max-width: 480px) {
+    .standards-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .std-card { padding: 16px 10px !important; }
+    .std-card .std-number { font-size: 28px !important; }
+    .std-card .btn-select { min-height: 40px; font-size: 12px; }
+    #mgmtPasswordModal input { font-size: 16px !important; }
+  }
+</style>
+</head>
+<body>
+<div class="select-std-page">
+  <!-- Header -->
+  <div class="select-std-header">
+    <div class="school-logo">🏫</div>
+    <h1>Select Your Standard</h1>
+    <p>Choose a standard to manage students, attendance, and results</p>
+  </div>
+
+  <div class="teacher-welcome" id="welcomeBanner">
+    👋 Welcome, <strong id="teacherWelcomeName">Teacher</strong> — Please select a standard to continue
+  </div>
+
+  <!-- Global School Settings Action Card (No standard selection required) -->
+  <div class="school-mgmt-card" style="width:100%;max-width:960px;margin:0 auto 20px auto;background:rgba(255,255,255,0.14);border:1.5px solid rgba(255,255,255,0.28);border-radius:14px;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;backdrop-filter:blur(10px)">
+    <div style="display:flex;align-items:center;gap:14px;color:#fff">
+      <div style="font-size:30px;background:rgba(255,255,255,0.2);padding:8px 12px;border-radius:10px;display:flex;align-items:center;justify-content:center">⚙️</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;letter-spacing:0.3px">School Settings (Management Protected)</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px">Configure standard-wise fees, academic year, timetable, subjects & notifications across the school</div>
+      </div>
+    </div>
+    <button onclick="openMgmtPasswordModal()" style="background:#4F46E5;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:all 0.2s">
+      ⚙️ Open School Settings →
+    </button>
+  </div>
+
+  <!-- Standards Grid -->
+  <div class="standards-grid" id="standardsGrid">
+    <!-- Cards injected by JS -->
+    <div style="color:rgba(255,255,255,.7);text-align:center;grid-column:1/-1;padding:40px">
+      <div style="font-size:32px;margin-bottom:12px">⏳</div>
+      Loading standards…
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="select-std-footer">
+    <span>Logged in as teacher</span>
+    <a onclick="openMgmtPasswordModal()" style="color:rgba(255,255,255,0.85);cursor:pointer;text-decoration:none">⚙️ School Settings</a>
+    <a onclick="Auth.logout()">Logout</a>
+  </div>
+</div>
+
+<!-- Management Password Modal on Select Standard Page -->
+<div class="mgmt-modal-overlay" id="mgmtPasswordModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.8);backdrop-filter:blur(8px);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:34px 28px;max-width:420px;width:90%;box-shadow:0 20px 25px -5px rgba(0,0,0,0.3);text-align:center;position:relative;animation:pop .2s ease">
+    <button onclick="closeMgmtPasswordModal()" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:#64748B">✕</button>
+    <div style="font-size:46px;margin-bottom:12px">🔐</div>
+    <h3 style="font-size:21px;font-weight:800;color:#1E293B;margin-bottom:6px">School Settings</h3>
+    <p style="font-size:13px;color:#64748B;margin-bottom:20px;line-height:1.5">Please enter the <b>Management Password</b> to access global school settings.</p>
+    
+    <div id="mgmtAlert" style="display:none;background:#FEE2E2;border:1.5px solid #F87171;color:#991B1B;font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;margin-bottom:16px;text-align:left"></div>
+
+    <form onsubmit="event.preventDefault(); verifyAndEnterSettings()">
+      <input 
+        type="password" 
+        id="mgmtPasswordInput" 
+        class="form-control" 
+        placeholder="Enter Management Password" 
+        required 
+        autocomplete="off" 
+        style="padding:12px 14px;font-size:15px;margin-bottom:16px;width:100%;box-sizing:border-box"
+      >
+      <button type="submit" id="mgmtSubmitBtn" class="btn btn-primary" style="width:100%;padding:12px;font-size:15px;font-weight:700">
+        🔓 Verify & Open Settings
+      </button>
+      <div style="margin-top:14px;font-size:12px;color:#94A3B8">Default password: <code>admin123</code></div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  // Auth guard — must be logged in as teacher
+  if (!Auth.requireTeacher()) { /* requireTeacher redirects */ }
+
+  const user = Auth.getUser();
+  document.getElementById('teacherWelcomeName').textContent = user?.name || 'Teacher';
+
+  async function loadStandards() {
+    const { ok, data } = await Api.getStandards();
+    const grid = document.getElementById('standardsGrid');
+
+    if (!ok) {
+      grid.innerHTML = `<div style="color:#fff;text-align:center;grid-column:1/-1;padding:40px">
+        ❌ Failed to load standards: ${data.error || 'Server error'}</div>`;
+      return;
+    }
+
+    const standards = data.standards || [];
+    grid.innerHTML = standards.map(s => `
+      <div class="std-card" onclick="selectStandard(${s.standard})">
+        <div class="std-number">${s.standard}</div>
+        <div class="std-label">Standard</div>
+        <div class="student-count">
+          👨‍🎓 <span>${s.total_students}</span> Students
+        </div>
+        <button class="btn-select" onclick="selectStandard(${s.standard}); event.stopPropagation();">
+          Select Standard
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function selectStandard(std) {
+    Standard.setActive(std);
+    // Highlight selected card briefly then redirect
+    const cards = document.querySelectorAll('.std-card');
+    cards.forEach((c, i) => {
+      if (i + 1 === std) {
+        c.style.background = 'rgba(255,255,255,0.35)';
+        c.style.transform  = 'scale(1.04)';
+      }
+    });
+    Toast.success(`Standard ${std} selected! Loading dashboard…`);
+    setTimeout(() => {
+      window.location.href = '/teacher/dashboard.html';
+    }, 700);
+  }
+
+  function openMgmtPasswordModal() {
+    document.getElementById('mgmtPasswordModal').style.display = 'flex';
+    document.getElementById('mgmtAlert').style.display = 'none';
+    document.getElementById('mgmtPasswordInput').value = '';
+    setTimeout(() => document.getElementById('mgmtPasswordInput').focus(), 150);
+  }
+
+  function closeMgmtPasswordModal() {
+    document.getElementById('mgmtPasswordModal').style.display = 'none';
+  }
+
+  async function verifyAndEnterSettings() {
+    const input = document.getElementById('mgmtPasswordInput');
+    const alertEl = document.getElementById('mgmtAlert');
+    const btn = document.getElementById('mgmtSubmitBtn');
+    const pw = input.value.trim();
+    if (!pw) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+    alertEl.style.display = 'none';
+
+    const { ok, data } = await Api.verifyManagementPassword(pw);
+    btn.disabled = false;
+    btn.textContent = '🔓 Verify & Open Settings';
+
+    if (ok && data?.management_token) {
+      sessionStorage.setItem('sms_mgmt_token', data.management_token);
+      Toast.success('Management password verified! Opening settings…');
+      setTimeout(() => {
+        window.location.href = 'settings.html';
+      }, 500);
+    } else {
+      alertEl.textContent = data?.error || 'Incorrect Management Password';
+      alertEl.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  loadStandards();
+</script>
+</body>
+</html>

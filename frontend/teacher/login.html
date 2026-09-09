@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher Login — EduManage Pro</title>
+<link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="login-logo">👨‍🏫</div>
+      <h1>Teacher Login</h1>
+      <p>Sign in to manage your classes and students</p>
+    </div>
+
+    <div class="alert alert-error" id="loginAlert"></div>
+
+    <form id="loginForm" onsubmit="doLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon">✉️</span>
+          <input type="email" class="form-control" id="email" placeholder="admin@school.com" required autofocus>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+          <button type="button" class="toggle-pw" id="togglePwBtn" onclick="togglePassword()">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-login" id="loginBtn">
+        <div class="spinner-sm"></div>
+        <span class="btn-text">🔐 Login</span>
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <a href="/index.html" style="color:#64748B;text-decoration:none;">← Back to Home</a>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  // Already logged in?
+  if (Auth.isLoggedIn() && Auth.isTeacher()) {
+    window.location.href = Standard.getActive()
+      ? '/teacher/dashboard.html'
+      : '/teacher/select-standard.html';
+  }
+
+  function togglePassword() {
+    const inp = document.getElementById('password');
+    const btn = document.getElementById('togglePwBtn');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
+  }
+
+  async function doLogin(e) {
+    e.preventDefault();
+    const alert = document.getElementById('loginAlert');
+    alert.classList.remove('show');
+
+    const btn = document.getElementById('loginBtn');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    const { ok, data } = await Api.teacherLogin(
+      document.getElementById('email').value.trim(),
+      document.getElementById('password').value
+    );
+
+    btn.classList.remove('loading'); btn.disabled = false;
+
+    if (ok) {
+      Auth.saveTeacherSession(data.token, data.teacher);
+      Standard.clear();
+      // ✅ ALWAYS go to select-standard — never directly to dashboard
+      window.location.href = '/teacher/select-standard.html';
+    } else {
+      alert.textContent = data.error || 'Invalid email or password.';
+      alert.classList.add('show');
+    }
+  }
+</script>
+</body>
+</html>

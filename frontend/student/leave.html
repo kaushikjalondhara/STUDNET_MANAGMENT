@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apply Leave — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>Student Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Portal</div>
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="profile.html"       class="nav-link"><span class="nav-icon">👤</span> My Profile</a>
+      <a href="attendance.html"    class="nav-link"><span class="nav-icon">📅</span> My Attendance</a>
+      <a href="result.html"        class="nav-link"><span class="nav-icon">📝</span> My Results</a>
+      <a href="homework.html"      class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"         class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"     class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="fees.html"          class="nav-link"><span class="nav-icon">💰</span> Student Fees</a>
+      <a href="notices.html"       class="nav-link"><span class="nav-icon">📢</span> Notices</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="leave.html"         class="nav-link active"><span class="nav-icon">📨</span> Apply Leave</a>
+      <a class="nav-link logout" onclick="Auth.logoutStudent()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="studentInitial">S</div>
+        <div>
+          <div class="teacher-name" id="studentName">Student</div>
+          <div class="teacher-role" id="stdBanner">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Apply for Leave</h1>
+        <div class="breadcrumb">Submit leave requests and track teacher approval</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openApplyModal()">➕ New Leave Request</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📨 My Leave Applications</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>From Date</th>
+                <th>To Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Teacher Remark</th>
+                <th>Submitted On</th>
+              </tr>
+            </thead>
+            <tbody id="myLeavesBody">
+              <tr><td colspan="7"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Apply Leave Modal -->
+<div class="modal-overlay" id="leaveModal">
+  <div class="modal">
+    <h3 class="modal-title">📨 Apply for Leave</h3>
+    <form onsubmit="submitLeaveApp(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">From Date *</label>
+          <input type="date" class="form-control" id="leaveFrom" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">To Date *</label>
+          <input type="date" class="form-control" id="leaveTo" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason for Leave *</label>
+        <textarea class="form-control" id="leaveReason" rows="4" placeholder="e.g. Due to family function / medical illness..." required></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeLeaveModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  if (Auth.requireStudent()) {
+    Auth.populateStudentUI();
+    loadMyLeaves();
+  }
+
+  async function loadMyLeaves() {
+    const tbody = document.getElementById('myLeavesBody');
+    const { ok, data } = await Api.getMyLeaves();
+    if (!ok) { Toast.error('Failed to load leaves.'); return; }
+
+    const leaves = data.leaves || [];
+    if (!leaves.length) {
+      tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📨</div><h3>No leave requests submitted yet</h3></div></td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = leaves.map((l, idx) => {
+      const isPending = l.status === 'Pending';
+      const isApproved = l.status === 'Approved';
+      const badgeClass = isApproved ? 'badge-success' : (isPending ? 'badge-info' : 'badge-danger');
+      const dateStr = l.created_at ? l.created_at.split('T')[0] : 'Recent';
+
+      return `
+        <tr>
+          <td style="font-weight:700">${idx + 1}</td>
+          <td><b>${l.from_date}</b></td>
+          <td><b>${l.to_date}</b></td>
+          <td>${l.reason}</td>
+          <td><span class="badge ${badgeClass}">${l.status}</span></td>
+          <td>${l.admin_remark || '—'}</td>
+          <td style="color:#94A3B8;font-size:12px">${dateStr}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function openApplyModal() {
+    document.getElementById('leaveModal').classList.add('open');
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('leaveFrom').value = today;
+    document.getElementById('leaveTo').value = today;
+  }
+  function closeLeaveModal() { document.getElementById('leaveModal').classList.remove('open'); }
+
+  async function submitLeaveApp(e) {
+    e.preventDefault();
+    const payload = {
+      from_date: document.getElementById('leaveFrom').value,
+      to_date: document.getElementById('leaveTo').value,
+      reason: document.getElementById('leaveReason').value.trim()
+    };
+
+    const { ok, data } = await Api.applyLeave(payload);
+    if (ok) {
+      Toast.success('Leave application submitted successfully!');
+      closeLeaveModal();
+      document.getElementById('leaveReason').value = '';
+      loadMyLeaves();
+    } else {
+      Toast.error(data.error || 'Failed to submit leave.');
+    }
+  }
+</script>
+</body>
+</html>

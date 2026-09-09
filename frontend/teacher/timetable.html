@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Timetable — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .tt-day-card {
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .tt-day-header {
+    background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    color: #fff;
+    padding: 12px 20px;
+    font-size: 16px;
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tt-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .tt-table th {
+    background: #F8FAFC;
+    padding: 10px 16px;
+    font-size: 13px;
+    text-align: left;
+    color: #475569;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .tt-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #F1F5F9;
+    font-size: 14px;
+  }
+  .day-tabs-nav {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    margin-bottom: 16px;
+    border-bottom: 1.5px solid #E2E8F0;
+  }
+  .day-tab-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    color: #475569;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .day-tab-btn.active {
+    background: #4F46E5;
+    border-color: #4F46E5;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+  }
+  .period-edit-row {
+    display: grid;
+    grid-template-columns: 70px 130px 1fr 130px 40px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #F8FAFC;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+  }
+  .period-edit-row input {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+  @media (max-width: 650px) {
+    .period-edit-row {
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link active"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Weekly Class Schedule</h1>
+        <div class="breadcrumb">Monday to Saturday class periods and subject schedule</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openTimetableEditor()">✏️ Edit & Manage Timetable</button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div id="timetableContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Timetable Editor Modal -->
+<div class="modal-overlay" id="ttEditorModal">
+  <div class="modal" style="max-width:800px;width:95%">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <h3 class="modal-title" style="margin:0">📆 Edit Class Timetable</h3>
+      <button type="button" class="btn btn-outline btn-sm" onclick="resetToDefaultTimetable()">🔄 Default Schedule</button>
+    </div>
+
+    <!-- Day Tabs -->
+    <div class="day-tabs-nav" id="dayTabsNav">
+      <!-- Injected by JS -->
+    </div>
+
+    <!-- Period Rows for Active Day -->
+    <div style="margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:70px 130px 1fr 130px 40px;gap:8px;padding:0 12px 6px;font-size:12px;font-weight:700;color:#64748B">
+        <span>Period #</span>
+        <span>Time (HH:MM)</span>
+        <span>Subject Name</span>
+        <span>Room / Lab</span>
+        <span></span>
+      </div>
+      <div id="periodRowsContainer" style="max-height:300px;overflow-y:auto;padding-right:4px">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <button type="button" class="btn btn-outline btn-sm" onclick="addNewPeriodRow()">➕ Add Period to Day</button>
+    </div>
+
+    <div class="modal-actions" style="border-top:1px solid #E2E8F0;padding-top:16px">
+      <button type="button" class="btn btn-outline" onclick="closeTimetableEditor()">Cancel</button>
+      <button type="button" class="btn btn-primary" onclick="saveTimetableChanges()">💾 Save Timetable</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let currentSchedule = {};
+  let editingDay = 'Monday';
+
+  if (Auth.requireTeacher() && Standard.requireActive()) {
+    Auth.populateTeacherUI();
+    Standard.updateBanners();
+    loadTimetable();
+  }
+
+  async function loadTimetable() {
+    const std = Standard.getActive();
+    const container = document.getElementById('timetableContainer');
+    const { ok, data } = await Api.getTimetable(std);
+    if (!ok) { Toast.error('Failed to load timetable.'); return; }
+
+    currentSchedule = data.timetable?.schedule || {};
+
+    container.innerHTML = DAYS.map(day => {
+      const periods = currentSchedule[day] || [];
+      const rows = periods.map(p => `
+        <tr>
+          <td style="font-weight:700">Period ${p.period}</td>
+          <td style="color:#4F46E5;font-weight:600">⏰ ${p.time}</td>
+          <td><b>📖 ${p.subject}</b></td>
+          <td><span class="badge badge-gray">${p.room || 'Classroom'}</span></td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="tt-day-card">
+          <div class="tt-day-header">
+            <span>📅 ${day}</span>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none;padding:4px 10px;cursor:pointer" onclick="openTimetableEditor('${day}')">✏️ Edit ${day}</button>
+          </div>
+          <div class="table-wrap">
+            <table class="tt-table">
+              <thead>
+                <tr>
+                  <th style="width:20%">Period</th>
+                  <th style="width:30%">Time</th>
+                  <th style="width:30%">Subject</th>
+                  <th style="width:20%">Room / Lab</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows || '<tr><td colspan="4" style="color:#94A3B8;text-align:center">No periods scheduled.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openTimetableEditor(day = 'Monday') {
+    editingDay = day;
+    // Clone schedule to prevent uncommitted changes
+    window.workingSchedule = JSON.parse(JSON.stringify(currentSchedule || {}));
+    
+    // Ensure all days exist
+    DAYS.forEach(d => {
+      if (!window.workingSchedule[d]) window.workingSchedule[d] = [];
+    });
+
+    renderDayTabs();
+    renderPeriodEditor();
+    document.getElementById('ttEditorModal').classList.add('open');
+  }
+
+  function closeTimetableEditor() {
+    document.getElementById('ttEditorModal').classList.remove('open');
+  }
+
+  function selectEditDay(day) {
+    saveCurrentDayFormToWorking();
+    editingDay = day;
+    renderDayTabs();
+    renderPeriodEditor();
+  }
+
+  function renderDayTabs() {
+    const tabsContainer = document.getElementById('dayTabsNav');
+    tabsContainer.innerHTML = DAYS.map(d => `
+      <button type="button" class="day-tab-btn ${d === editingDay ? 'active' : ''}" onclick="selectEditDay('${d}')">
+        ${d} (${(window.workingSchedule[d] || []).length})
+      </button>
+    `).join('');
+  }
+
+  function renderPeriodEditor() {
+    const container = document.getElementById('periodRowsContainer');
+    const list = window.workingSchedule[editingDay] || [];
+
+    if (!list.length) {
+      container.innerHTML = '<div style="text-align:center;padding:20px;color:#94A3B8">No periods for this day. Click "+ Add Period to Day" below.</div>';
+      return;
+    }
+
+    container.innerHTML = list.map((p, idx) => `
+      <div class="period-edit-row" data-index="${idx}">
+        <input type="number" class="form-control p-period" value="${p.period ?? (idx + 1)}" min="1" max="15">
+        <input type="text" class="form-control p-time" value="${p.time || ''}" placeholder="08:00 - 08:45">
+        <input type="text" class="form-control p-subj" value="${p.subject || ''}" placeholder="Subject name">
+        <input type="text" class="form-control p-room" value="${p.room || ''}" placeholder="Room/Lab">
+        <button type="button" class="btn btn-danger btn-sm" style="padding:6px 8px" onclick="removePeriodRow(${idx})">🗑️</button>
+      </div>
+    `).join('');
+  }
+
+  function saveCurrentDayFormToWorking() {
+    const rows = document.querySelectorAll('#periodRowsContainer .period-edit-row');
+    const updated = [];
+    rows.forEach(r => {
+      const period = parseInt(r.querySelector('.p-period').value) || (updated.length + 1);
+      const time = r.querySelector('.p-time').value.trim();
+      const subject = r.querySelector('.p-subj').value.trim();
+      const room = r.querySelector('.p-room').value.trim();
+      if (subject || time) {
+        updated.push({ period, time: time || 'TBD', subject: subject || 'Free Period', room: room || 'Classroom' });
+      }
+    });
+    window.workingSchedule[editingDay] = updated;
+  }
+
+  function addNewPeriodRow() {
+    saveCurrentDayFormToWorking();
+    const list = window.workingSchedule[editingDay] || [];
+    const nextPeriod = list.length + 1;
+    list.push({
+      period: nextPeriod,
+      time: '08:00 - 08:45',
+      subject: '',
+      room: 'Room 101'
+    });
+    window.workingSchedule[editingDay] = list;
+    renderDayTabs();
+    renderPeriodEditor();
+  }
+
+  function removePeriodRow(index) {
+    saveCurrentDayFormToWorking();
+    window.workingSchedule[editingDay].splice(index, 1);
+    renderDayTabs();
+    renderPeriodEditor();
+  }
+
+  function resetToDefaultTimetable() {
+    if (!confirm('Are you sure you want to reset the timetable to default schedule?')) return;
+    
+    const DEFAULT_SCHEDULE = {
+      'Monday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'Mathematics', room: 'Room 101'},
+        {period: 2, time: '08:45 - 09:30', subject: 'Science', room: 'Lab 1'},
+        {period: 3, time: '09:45 - 10:30', subject: 'English', room: 'Room 101'},
+        {period: 4, time: '10:30 - 11:15', subject: 'Social Science', room: 'Room 101'},
+        {period: 5, time: '11:30 - 12:15', subject: 'Gujarati', room: 'Room 101'},
+        {period: 6, time: '12:15 - 01:00', subject: 'Hindi', room: 'Room 101'}
+      ],
+      'Tuesday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'Science', room: 'Lab 1'},
+        {period: 2, time: '08:45 - 09:30', subject: 'Mathematics', room: 'Room 101'},
+        {period: 3, time: '09:45 - 10:30', subject: 'Computer', room: 'Comp Lab'},
+        {period: 4, time: '10:30 - 11:15', subject: 'English', room: 'Room 101'},
+        {period: 5, time: '11:30 - 12:15', subject: 'Social Science', room: 'Room 101'},
+        {period: 6, time: '12:15 - 01:00', subject: 'PT / Sports', room: 'Ground'}
+      ],
+      'Wednesday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'English', room: 'Room 101'},
+        {period: 2, time: '08:45 - 09:30', subject: 'Gujarati', room: 'Room 101'},
+        {period: 3, time: '09:45 - 10:30', subject: 'Mathematics', room: 'Room 101'},
+        {period: 4, time: '10:30 - 11:15', subject: 'Science', room: 'Lab 1'},
+        {period: 5, time: '11:30 - 12:15', subject: 'Hindi', room: 'Room 101'},
+        {period: 6, time: '12:15 - 01:00', subject: 'Drawing / Art', room: 'Art Room'}
+      ],
+      'Thursday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'Mathematics', room: 'Room 101'},
+        {period: 2, time: '08:45 - 09:30', subject: 'Social Science', room: 'Room 101'},
+        {period: 3, time: '09:45 - 10:30', subject: 'Science', room: 'Lab 1'},
+        {period: 4, time: '10:30 - 11:15', subject: 'English', room: 'Room 101'},
+        {period: 5, time: '11:30 - 12:15', subject: 'Gujarati', room: 'Room 101'},
+        {period: 6, time: '12:15 - 01:00', subject: 'Library', room: 'Library'}
+      ],
+      'Friday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'Science', room: 'Lab 1'},
+        {period: 2, time: '08:45 - 09:30', subject: 'Mathematics', room: 'Room 101'},
+        {period: 3, time: '09:45 - 10:30', subject: 'Computer', room: 'Comp Lab'},
+        {period: 4, time: '10:30 - 11:15', subject: 'Hindi', room: 'Room 101'},
+        {period: 5, time: '11:30 - 12:15', subject: 'English', room: 'Room 101'},
+        {period: 6, time: '12:15 - 01:00', subject: 'Music / Dance', room: 'Hall'}
+      ],
+      'Saturday': [
+        {period: 1, time: '08:00 - 08:45', subject: 'Mathematics', room: 'Room 101'},
+        {period: 2, time: '08:45 - 09:30', subject: 'General Knowledge', room: 'Room 101'},
+        {period: 3, time: '09:45 - 10:30', subject: 'Gujarati', room: 'Room 101'},
+        {period: 4, time: '10:30 - 11:15', subject: 'Yoga / Meditation', room: 'Ground'}
+      ]
+    };
+
+    window.workingSchedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+    renderDayTabs();
+    renderPeriodEditor();
+    Toast.info('Default schedule loaded. Click "Save Timetable" to apply.');
+  }
+
+  async function saveTimetableChanges() {
+    saveCurrentDayFormToWorking();
+    const std = Standard.getActive();
+    const { ok, data } = await Api.saveTimetable(std, window.workingSchedule);
+    if (ok) {
+      Toast.success('Timetable saved and updated successfully!');
+      currentSchedule = window.workingSchedule;
+      closeTimetableEditor();
+      loadTimetable();
+    } else {
+      Toast.error(data?.error || 'Failed to save timetable.');
+    }
+  }
+</script>
+</body>
+</html>

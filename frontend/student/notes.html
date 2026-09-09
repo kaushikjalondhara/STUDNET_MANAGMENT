@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Materials & Notes — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>Student Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Portal</div>
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="profile.html"       class="nav-link"><span class="nav-icon">👤</span> My Profile</a>
+      <a href="attendance.html"    class="nav-link"><span class="nav-icon">📅</span> My Attendance</a>
+      <a href="result.html"        class="nav-link"><span class="nav-icon">📝</span> My Results</a>
+      <a href="homework.html"      class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"         class="nav-link active"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"     class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="fees.html"          class="nav-link"><span class="nav-icon">💰</span> Student Fees</a>
+      <a href="notices.html"       class="nav-link"><span class="nav-icon">📢</span> Notices</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="leave.html"         class="nav-link"><span class="nav-icon">📨</span> Apply Leave</a>
+      <a class="nav-link logout" onclick="Auth.logoutStudent()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="studentInitial">S</div>
+        <div>
+          <div class="teacher-name" id="studentName">Student</div>
+          <div class="teacher-role" id="stdBanner">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Study Material & Chapter Notes</h1>
+        <div class="breadcrumb">Subject-wise revision notes and study resources from your teachers</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div id="studentNotesContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  if (Auth.requireStudent()) {
+    Auth.populateStudentUI();
+    loadStudentNotes();
+  }
+
+  async function loadStudentNotes() {
+    const container = document.getElementById('studentNotesContainer');
+    const { ok, data } = await Api.getNotes();
+
+    if (!ok || !data) {
+      container.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div><h3>Failed to load notes</h3></div></div>';
+      return;
+    }
+
+    const notes = data.notes || [];
+    if (!notes.length) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon">📖</div>
+            <h3>No study materials posted yet</h3>
+            <p>Your teachers have not uploaded notes for Standard ${data.standard || ''} yet. Check back soon!</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = notes.map(n => {
+      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Recent';
+      return `
+        <div class="card" style="margin-bottom:18px;border-left:4px solid #4F46E5;box-shadow:var(--shadow)">
+          <div class="card-header" style="padding-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="badge badge-info" style="font-size:12px;font-weight:700;padding:4px 10px">${n.subject}</span>
+              <h3 style="font-size:16px;font-weight:800;color:#1E293B;margin:0;word-break:break-word">${n.title}</h3>
+            </div>
+            <span style="font-size:12px;color:#94A3B8">📅 ${dateStr}</span>
+          </div>
+          <div class="card-body" style="padding-top:6px">
+            <p style="color:#334155;font-size:14px;white-space:pre-line;line-height:1.6;margin-bottom:14px;word-break:break-word">${n.description}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <span style="font-size:12px;color:#64748B">By: <b>${n.teacher_name || 'Class Teacher'}</b></span>
+              ${n.file_link ? `
+                <a href="${n.file_link}" target="_blank" class="btn btn-primary btn-sm" style="background:#4F46E5;display:inline-flex;align-items:center;gap:6px;min-height:38px">
+                  📥 Open Study Resource
+                </a>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+</script>
+</body>
+</html>

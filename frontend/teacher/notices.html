@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notice Board — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link active"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Notice Board</h1>
+        <div class="breadcrumb">Publish school announcements & standard notices</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openNoticeModal()">➕ Post Notice</button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div id="noticesListContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Post Notice Modal -->
+<div class="modal-overlay" id="noticeModal">
+  <div class="modal">
+    <h3 class="modal-title">📢 Post New Announcement</h3>
+    <form onsubmit="submitNotice(event)">
+      <div class="form-group">
+        <label class="form-label">Notice Title *</label>
+        <input type="text" class="form-control" id="noticeTitle" placeholder="e.g. Science Exhibition / Holiday Notice" required>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Target Audience *</label>
+          <select class="form-control" id="noticeTarget">
+            <option value="current">Current Active Standard Only</option>
+            <option value="all">All School Standards (1 to 12)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority / Category</label>
+          <select class="form-control" id="noticePriority">
+            <option value="General">General Announcement</option>
+            <option value="Urgent">⚠️ Urgent Notice</option>
+            <option value="Event">🎉 School Event</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notice Description *</label>
+        <textarea class="form-control" id="noticeDesc" rows="4" placeholder="Write full details..." required></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeNoticeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Publish Notice</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  if (Auth.requireTeacher() && Standard.requireActive()) {
+    Auth.populateTeacherUI();
+    Standard.updateBanners();
+    loadNotices();
+  }
+
+  async function loadNotices() {
+    const std = Standard.getActive();
+    const container = document.getElementById('noticesListContainer');
+    const { ok, data } = await Api.getNotices(std);
+    if (!ok) { Toast.error('Failed to load notices.'); return; }
+
+    const notices = data.notices || [];
+    if (!notices.length) {
+      container.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">📢</div><h3>No announcements posted yet</h3></div></div>';
+      return;
+    }
+
+    container.innerHTML = notices.map(n => {
+      const isUrgent = n.priority === 'Urgent';
+      const isEvent = n.priority === 'Event';
+      const badgeClass = isUrgent ? 'badge-danger' : (isEvent ? 'badge-info' : 'badge-success');
+      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Recent';
+
+      return `
+        <div class="card" style="margin-bottom:16px;border-left:5px solid ${isUrgent ? '#DC2626' : '#4F46E5'}">
+          <div class="card-body" style="padding:16px 14px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+              <div style="flex:1;min-width:200px">
+                <span class="badge ${badgeClass}" style="margin-right:8px">${n.priority}</span>
+                <span class="badge badge-gray">${n.standard_label || 'All Standards'}</span>
+                <h3 style="font-size:18px;font-weight:800;color:#1E293B;margin-top:8px;word-break:break-word">${n.title}</h3>
+              </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n._id}')" style="min-height:38px">🗑️ Delete</button>
+            </div>
+            <p style="color:#475569;font-size:14px;line-height:1.6;margin:10px 0;word-break:break-word">${n.description}</p>
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:10px">
+              <span>👤 Posted by: <b>${n.posted_by}</b></span>
+              <span>📅 Date: ${dateStr}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openNoticeModal() { document.getElementById('noticeModal').classList.add('open'); }
+  function closeNoticeModal() { document.getElementById('noticeModal').classList.remove('open'); }
+
+  async function submitNotice(e) {
+    e.preventDefault();
+    const std = Standard.getActive();
+    const target = document.getElementById('noticeTarget').value;
+    const payload = {
+      title: document.getElementById('noticeTitle').value.trim(),
+      standard: target === 'all' ? 0 : std,
+      priority: document.getElementById('noticePriority').value,
+      description: document.getElementById('noticeDesc').value.trim()
+    };
+
+    const { ok, data } = await Api.addNotice(payload);
+    if (ok) {
+      Toast.success('Notice published successfully!');
+      closeNoticeModal();
+      document.getElementById('noticeTitle').value = '';
+      document.getElementById('noticeDesc').value = '';
+      loadNotices();
+    } else {
+      Toast.error(data.error || 'Failed to post notice.');
+    }
+  }
+
+  async function deleteNotice(id) {
+    if (!confirm('Are you sure you want to delete this notice?')) return;
+    const { ok } = await Api.deleteNotice(id);
+    if (ok) {
+      Toast.success('Notice deleted.');
+      loadNotices();
+    }
+  }
+</script>
+</body>
+</html>

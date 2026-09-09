@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notifications & Alerts — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .notif-card {
+    background: #fff;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.2s ease;
+  }
+  .notif-card.unread {
+    background: #F8FAFC;
+    border-left: 4px solid #4F46E5;
+  }
+  .notif-icon-box {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .notif-icon-box.fee        { background: #ECFDF5; color: #059669; }
+  .notif-icon-box.homework   { background: #EFF6FF; color: #2563EB; }
+  .notif-icon-box.result     { background: #F5F3FF; color: #7C3AED; }
+  .notif-icon-box.notice     { background: #FFFBEB; color: #D97706; }
+  .notif-icon-box.attendance { background: #FEF2F2; color: #DC2626; }
+  .notif-icon-box.leave      { background: #F0FDF4; color: #16A34A; }
+  .notif-icon-box.notes      { background: #FFF7ED; color: #EA580C; }
+  .notif-icon-box.general    { background: #F1F5F9; color: #475569; }
+
+  @media (max-width: 480px) {
+    .notif-card {
+      padding: 12px 10px;
+      gap: 10px;
+    }
+    .notif-icon-box {
+      width: 36px;
+      height: 36px;
+      font-size: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">gyan jyot vidhaya bhavan</h2>
+        <span>Student Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Portal</div>
+      <a href="dashboard.html"     class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="profile.html"       class="nav-link"><span class="nav-icon">👤</span> My Profile</a>
+      <a href="attendance.html"    class="nav-link"><span class="nav-icon">📅</span> My Attendance</a>
+      <a href="result.html"        class="nav-link"><span class="nav-icon">📝</span> My Results</a>
+      <a href="homework.html"      class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"         class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"     class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="fees.html"          class="nav-link"><span class="nav-icon">💰</span> Student Fees</a>
+      <a href="notices.html"       class="nav-link"><span class="nav-icon">📢</span> Notices</a>
+      <a href="notifications.html" class="nav-link active"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="leave.html"         class="nav-link"><span class="nav-icon">📨</span> Apply Leave</a>
+      <a class="nav-link logout" onclick="Auth.logoutStudent()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="studentInitial">S</div>
+        <div>
+          <div class="teacher-name" id="studentName">Student</div>
+          <div class="teacher-role" id="stdBanner">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Notifications & Alerts</h1>
+        <div class="breadcrumb">Fee reminders, homework assignments, result announcements and alerts</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-outline btn-sm" onclick="markAllAsRead()">✓ Mark All as Read</button>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div id="notificationsContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+  if (Auth.requireStudent()) {
+    Auth.populateStudentUI();
+    loadNotifications();
+  }
+
+  async function loadNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    const { ok, data } = await Api.getMyNotifications();
+    if (!ok || !data) { Toast.error('Failed to load notifications.'); return; }
+
+    const list = data.notifications || [];
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon">🔔</div>
+            <h3>No notifications yet</h3>
+            <p>You are all caught up! New fee alerts and homework notifications will appear here.</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    const typeIcons = {
+      fee: '💰',
+      homework: '📚',
+      result: '📝',
+      notice: '📢',
+      attendance: '📅',
+      leave: '📨',
+      notes: '📖',
+      general: '🔔'
+    };
+
+    container.innerHTML = list.map(n => {
+      const type = n.type || 'general';
+      const icon = typeIcons[type] || '🔔';
+      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Today';
+
+      return `
+        <div class="notif-card ${!n.read ? 'unread' : ''}" onclick="openNotification('${n._id}', '${n.link || ''}')">
+          <div class="notif-icon-box ${type}">${icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;margin-bottom:4px">
+              <h4 style="font-size:15px;font-weight:700;color:#1E293B;margin:0;word-break:break-word">${n.title}</h4>
+              <span style="font-size:12px;color:#94A3B8">📅 ${dateStr}</span>
+            </div>
+            <p style="font-size:13px;color:#475569;margin:0 0 6px;word-break:break-word">${n.message}</p>
+            ${n.link ? `<a href="${n.link}" class="btn btn-outline btn-sm" style="display:inline-block;padding:3px 10px;font-size:11px">View Details →</a>` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function openNotification(id, link) {
+    await Api.markNotificationRead(id);
+    if (link) {
+      window.location.href = link;
+    } else {
+      loadNotifications();
+    }
+  }
+
+  async function markAllAsRead() {
+    const { ok } = await Api.markAllNotificationsRead();
+    if (ok) {
+      Toast.success('All notifications marked as read.');
+      loadNotifications();
+    }
+  }
+</script>
+</body>
+</html>
