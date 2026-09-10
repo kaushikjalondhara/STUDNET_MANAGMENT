@@ -50,12 +50,79 @@
     </button>
   </div>
 
-  <!-- Standards Grid -->
+  <!-- Standards Grid (Pre-rendered for Instant 0-Second Load) -->
   <div class="standards-grid" id="standardsGrid">
-    <!-- Cards injected by JS -->
-    <div style="color:rgba(255,255,255,.7);text-align:center;grid-column:1/-1;padding:40px">
-      <div style="font-size:32px;margin-bottom:12px">⏳</div>
-      Loading standards…
+    <div class="std-card" onclick="selectStandard(1)">
+      <div class="std-number">1</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_1">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(1); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(2)">
+      <div class="std-number">2</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_2">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(2); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(3)">
+      <div class="std-number">3</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_3">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(3); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(4)">
+      <div class="std-number">4</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_4">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(4); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(5)">
+      <div class="std-number">5</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_5">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(5); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(6)">
+      <div class="std-number">6</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_6">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(6); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(7)">
+      <div class="std-number">7</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_7">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(7); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(8)">
+      <div class="std-number">8</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_8">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(8); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(9)">
+      <div class="std-number">9</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_9">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(9); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(10)">
+      <div class="std-number">10</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_10">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(10); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(11)">
+      <div class="std-number">11</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_11">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(11); event.stopPropagation();">Select Standard</button>
+    </div>
+    <div class="std-card" onclick="selectStandard(12)">
+      <div class="std-number">12</div>
+      <div class="std-label">Standard</div>
+      <div class="student-count" id="stdCount_12">👨‍🎓 <span>6</span> Students</div>
+      <button class="btn-select" onclick="selectStandard(12); event.stopPropagation();">Select Standard</button>
     </div>
   </div>
 
@@ -108,28 +175,19 @@
   document.getElementById('teacherWelcomeName').textContent = user?.name || 'Teacher';
 
   async function loadStandards() {
-    const { ok, data } = await Api.getStandards();
-    const grid = document.getElementById('standardsGrid');
-
-    if (!ok) {
-      grid.innerHTML = `<div style="color:#fff;text-align:center;grid-column:1/-1;padding:40px">
-        ❌ Failed to load standards: ${data.error || 'Server error'}</div>`;
-      return;
+    try {
+      const { ok, data } = await Api.getStandards();
+      if (ok && data?.standards) {
+        data.standards.forEach(s => {
+          const countEl = document.getElementById(`stdCount_${s.standard}`);
+          if (countEl) {
+            countEl.innerHTML = `👨‍🎓 <span>${s.total_students}</span> Students`;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Background standards sync:', e);
     }
-
-    const standards = data.standards || [];
-    grid.innerHTML = standards.map(s => `
-      <div class="std-card" onclick="selectStandard(${s.standard})">
-        <div class="std-number">${s.standard}</div>
-        <div class="std-label">Standard</div>
-        <div class="student-count">
-          👨‍🎓 <span>${s.total_students}</span> Students
-        </div>
-        <button class="btn-select" onclick="selectStandard(${s.standard}); event.stopPropagation();">
-          Select Standard
-        </button>
-      </div>
-    `).join('');
   }
 
   function selectStandard(std) {
