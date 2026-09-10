@@ -477,6 +477,12 @@
       document.getElementById('btnPayOnline').style.display = 'inline-flex';
     }
 
+    // Dynamic Due Date Badge from School Settings
+    const dueDateBadge = document.getElementById('feeDueDateBadge');
+    if (dueDateBadge && f.due_date) {
+      dueDateBadge.textContent = `Due: ${formatDueDate(f.due_date)}`;
+    }
+
     // Breakdown table
     const breakdown = f.breakdown || [];
     document.getElementById('feeBreakdownBody').innerHTML = breakdown.map(b => `
@@ -508,6 +514,26 @@
           </div>
         </div>
       `).join('');
+    }
+  }
+
+  function formatDueDate(dateStr) {
+    if (!dateStr) return '31 Oct 2026';
+    try {
+      if (dateStr.includes('-')) {
+        const parts = dateStr.split('-');
+        if (parts.length === 3 && parts[0].length === 4) {
+          const year = parts[0];
+          const monthIndex = parseInt(parts[1], 10) - 1;
+          const day = parseInt(parts[2], 10);
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthName = months[monthIndex] || parts[1];
+          return `${day} ${monthName} ${year}`;
+        }
+      }
+      return dateStr;
+    } catch (e) {
+      return dateStr;
     }
   }
 

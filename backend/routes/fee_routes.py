@@ -100,7 +100,11 @@ def send_fee_reminder():
     data = request.get_json(silent=True) or {}
     std_param = data.get('standard')
     student_id = data.get('student_id') # Optional specific student
-    due_date = data.get('due_date', '31-Oct-2026')
+    due_date = data.get('due_date')
+    if not due_date:
+        from models.settings_model import get_school_settings
+        settings = get_school_settings()
+        due_date = settings.get('fees', {}).get('due_date', '31-Oct-2026')
 
     if not std_param:
         return jsonify({'success': False, 'error': 'standard is required.'}), 400
