@@ -185,7 +185,7 @@
         <div class="card" style="align-self:start;height:fit-content">
           <div class="card-header">
             <span class="card-title">📋 Fee Structure Breakdown</span>
-            <span class="badge badge-info" id="feeDueDateBadge">Due: 31-Oct-2026</span>
+            <span class="badge badge-info" id="feeDueDateBadge" style="display:none"></span>
           </div>
           <div class="table-wrap">
             <table>
@@ -437,8 +437,22 @@
   }
 
   async function initPage() {
+    loadDueDateImmediately();
     await loadPaymentSettings();
     await loadStudentFees();
+  }
+
+  async function loadDueDateImmediately() {
+    try {
+      const { ok, data } = await Api.getPublicSchoolInfo();
+      if (ok && data?.due_date) {
+        const badge = document.getElementById('feeDueDateBadge');
+        if (badge) {
+          badge.textContent = `Due: ${formatDueDate(data.due_date)}`;
+          badge.style.display = 'inline-block';
+        }
+      }
+    } catch (e) {}
   }
 
   async function loadPaymentSettings() {
@@ -477,10 +491,11 @@
       document.getElementById('btnPayOnline').style.display = 'inline-flex';
     }
 
-    // Dynamic Due Date Badge from School Settings
+    // Dynamic Due Date Badge from Student Fee Record
     const dueDateBadge = document.getElementById('feeDueDateBadge');
     if (dueDateBadge && f.due_date) {
       dueDateBadge.textContent = `Due: ${formatDueDate(f.due_date)}`;
+      dueDateBadge.style.display = 'inline-block';
     }
 
     // Breakdown table

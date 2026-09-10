@@ -10,14 +10,19 @@ teacher_bp = Blueprint('teacher', __name__)
 @teacher_required
 def get_all_standards():
     """Overview of all 12 standards — used on the Select Standard page."""
-    standards = []
-    for std in range(1, 13):
-        count = count_by_standard(std)
-        standards.append({
+    from database.db import get_db
+    db = get_db()
+    counts = {doc['_id']: doc['count'] for doc in db.students.aggregate([
+        {'$group': {'_id': '$standard', 'count': {'$sum': 1}}}
+    ])}
+    standards = [
+        {
             'standard': std,
             'label': f'Standard {std}',
-            'total_students': count
-        })
+            'total_students': counts.get(std, 0)
+        }
+        for std in range(1, 13)
+    ]
     return jsonify({'success': True, 'standards': standards})
 
 @teacher_bp.route('/dashboard', methods=['GET'])

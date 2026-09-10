@@ -79,11 +79,19 @@ def create_app():
     def js_files(filename):
         return send_from_directory(os.path.join(app.static_folder, 'js'), filename)
 
+    @app.route('/api/health')
+    def health_check():
+        return jsonify({'status': 'ok', 'message': 'Student Management System is healthy'}), 200
+
     @app.after_request
     def add_header(response):
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
+        from flask import request
+        if request.path.startswith('/api/'):
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+        elif request.path.startswith('/css/') or request.path.startswith('/js/') or any(request.path.endswith(ext) for ext in ['.css', '.js', '.png', '.jpg', '.ico', '.svg']):
+            response.headers['Cache-Control'] = 'public, max-age=86400'
         return response
 
     @jwt.expired_token_loader

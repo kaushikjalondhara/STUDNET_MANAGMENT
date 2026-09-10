@@ -11,7 +11,15 @@ def get_db():
     global _client, _db
     if _db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
-        kwargs = {'serverSelectionTimeoutMS': 20000}
+        kwargs = {
+            'serverSelectionTimeoutMS': 5000,
+            'connectTimeoutMS': 5000,
+            'socketTimeoutMS': 15000,
+            'maxPoolSize': 50,
+            'minPoolSize': 5,
+            'maxIdleTimeMS': 45000,
+            'retryWrites': True
+        }
         if mongo_uri.startswith('mongodb+srv') or 'ssl=true' in mongo_uri.lower() or 'tls=true' in mongo_uri.lower():
             try:
                 import certifi
@@ -28,14 +36,10 @@ def init_db(app):
     with app.app_context():
         db = get_db()
 
-        # ── Schema migration: phone → mobile ──────────────────────────────────
-        # If any student has 'phone' but not 'mobile', drop and re-seed
-        old_schema = db.students.count_documents(
-            {'phone': {'$exists': True}, 'mobile': {'$exists': False}}
-        )
-        if old_schema > 0:
-            db.students.drop()
-            print("  → Schema migration: dropped old students (phone → mobile)")
+        # ── Fast boot: If DB is already seeded, skip heavy re-indexing and schema checks ──
+        if db.teachers.count_documents({}) > 0 and db.students.count_documents({}) > 0:
+            print("✅ Database ready (cached warm state).")
+            return
 
         # ── Indexes ──────────────────────────────────────────────────────────
         db.teachers.create_index([('email', ASCENDING)], unique=True)
