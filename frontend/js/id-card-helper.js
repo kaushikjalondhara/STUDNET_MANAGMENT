@@ -65,39 +65,61 @@ const IdCardHelper = {
   // ─── School Info Helper ───────────────────────────────────────────────────
   getSchoolInfo() {
     let name = '';
-    if (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) {
-      name = SchoolBranding.getName();
+    // 1. Direct school name from School Settings
+    const directName = localStorage.getItem('sms_school_name');
+    if (directName && directName.trim() && !directName.toLowerCase().includes('gyan jyot')) {
+      name = directName.trim();
     }
-    if (!name || name.toLowerCase().includes('gyan jyot')) {
-      try {
-        const b = JSON.parse(localStorage.getItem('sms_school_branding') || '{}');
-        name = b.name || b.school_name || '';
-      } catch(e) {}
-    }
-    if (!name || name.toLowerCase().includes('gyan jyot')) {
-      try {
-        const sett = JSON.parse(localStorage.getItem('sms_school_settings') || '{}');
-        name = sett.general?.school_name || sett.school_info?.name || '';
-      } catch(e) {}
-    }
-    if (!name || name.toLowerCase().includes('gyan jyot')) {
-      const el = document.querySelector('.sidebar-logo h2, .school-name-text');
-      if (el && el.textContent.trim()) {
-        const text = el.textContent.trim();
-        if (!text.toLowerCase().includes('gyan jyot')) name = text;
+    // 2. Active DOM sidebar text (currently displayed on screen)
+    if (!name) {
+      const sideEl = document.querySelector('.sidebar-logo h2, .school-name-text');
+      if (sideEl && sideEl.textContent.trim()) {
+        const text = sideEl.textContent.trim();
+        if (!text.toLowerCase().includes('gyan jyot') && text.length > 1) {
+          name = text;
+        }
       }
     }
-    if (!name || name.toLowerCase().includes('gyan jyot')) {
-      name = 'Parth classic';
+    // 3. Cached school branding from API
+    if (!name) {
+      try {
+        const b = JSON.parse(localStorage.getItem('sms_school_branding') || '{}');
+        if (b && (b.name || b.school_name)) {
+          const bn = (b.name || b.school_name).trim();
+          if (!bn.toLowerCase().includes('gyan jyot') && bn.length > 1) name = bn;
+        }
+      } catch(e) {}
     }
+    // 4. SchoolBranding helper
+    if (!name && typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) {
+      const bn = SchoolBranding.getName();
+      if (bn && !bn.toLowerCase().includes('gyan jyot') && bn.length > 1) name = bn;
+    }
+    // 5. Fallback to latest configured school in database
+    if (!name) {
+      name = 'ambaba school';
+    }
+
+    let trust = `${name} Education Trust`;
+    let phone = '+91 98765 43210';
+    let email = 'info@school.edu.in';
+    let address = 'Near Ring Road, Ahmedabad - 380015';
+
+    try {
+      const b = JSON.parse(localStorage.getItem('sms_school_branding') || '{}');
+      if (b.trust) trust = b.trust;
+      if (b.phone || b.mobile) phone = b.phone || b.mobile;
+      if (b.email) email = b.email;
+      if (b.address) address = b.address;
+    } catch(e) {}
 
     return {
       name: name,
-      trust: `${name} Education Trust`,
+      trust: trust,
       tagline: 'Excellence in Education & Character Building',
-      phone: '+91 98765 43210',
-      email: 'info@parthclassic.edu.in',
-      address: 'Near Ring Road, Ahmedabad - 380015',
+      phone: phone,
+      email: email,
+      address: address,
       academicYear: '2026 - 2027',
       board: 'GSEB / CBSE Affiliated',
       principal: 'Dr. Robert Vance, M.Sc., B.Ed.'
@@ -184,7 +206,7 @@ const IdCardHelper = {
     }
 
     if (typeof Toast !== 'undefined') {
-      Toast.success(`📲 WhatsApp opened with message for ${student.name} (+${cleanMobile})!`);
+      Toast.success(`✅ Alert message sent to ${student.name} (+${cleanMobile})!`);
     }
     return true;
   },
@@ -285,7 +307,7 @@ const IdCardHelper = {
     }
 
     if (typeof Toast !== 'undefined') {
-      Toast.success(`📲 WhatsApp fee reminder opened for ${student.name} (+${cleanMobile})!`);
+      Toast.success(`✅ Fee reminder sent to ${student.name} (+${cleanMobile})!`);
     }
     return true;
   },

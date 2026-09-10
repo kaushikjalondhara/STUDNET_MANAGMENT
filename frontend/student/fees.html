@@ -104,7 +104,7 @@
     <div class="sidebar-logo">
       <div class="logo-icon">🏫</div>
       <div class="logo-text">
-        <h2 class="school-name-text">Parth classic</h2>
+        <h2 class="school-name-text">ambaba school</h2>
         <span>Student Portal</span>
       </div>
       <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
@@ -418,9 +418,9 @@
 
 <div id="toast-container"></div>
 <!-- External Scripts -->
-<script src="../js/api.js?v=2"></script>
-<script src="../js/auth.js?v=2"></script>
-<script src="../js/print-helper.js?v=2"></script>
+<script src="../js/api.js?v=10"></script>
+<script src="../js/auth.js?v=10"></script>
+<script src="../js/print-helper.js?v=10"></script>
 <script>
   let currentFeeData = null;
   let activePayMode = 'UPI';
@@ -690,7 +690,7 @@
     return new Promise((resolve, reject) => {
       if (window.Razorpay) { resolve(); return; }
       const s = document.createElement('script');
-      s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      s.src = 'https://checkout.razorpay.com/v1/checkout.js?v=10';
       s.async = true;
       s.onload = () => resolve();
       s.onerror = () => reject(new Error('Razorpay SDK failed to load'));

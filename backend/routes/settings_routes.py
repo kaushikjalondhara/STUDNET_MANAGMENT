@@ -54,6 +54,26 @@ def get_all_settings():
     settings = get_school_settings()
     return jsonify({'success': True, 'settings': settings})
 
+@settings_bp.route('/public', methods=['GET'])
+def get_public_school_info():
+    """Public endpoint to fetch current school branding and info without auth."""
+    settings = get_school_settings()
+    school_info = settings.get('school_info', {})
+    fees = settings.get('fees', {})
+    return jsonify({
+        'success': True,
+        'school_info': school_info,
+        'academic_year': settings.get('academic', {}).get('academic_year', '2026-2027'),
+        'payment_settings': {
+            'upi_id': fees.get('upi_id'),
+            'payee_name': fees.get('payee_name', school_info.get('name')),
+            'merchant_name': fees.get('merchant_name', school_info.get('name')),
+            'razorpay_key_id': fees.get('razorpay_key_id'),
+            'enable_upi': fees.get('enable_upi', True),
+            'enable_razorpay': fees.get('enable_razorpay', True)
+        }
+    }), 200
+
 @settings_bp.route('/<category>', methods=['PUT', 'POST'])
 @teacher_required
 def update_category(category):
@@ -83,26 +103,3 @@ def update_category(category):
 def get_fee_config(standard):
     cfg = get_standard_fee_config(standard)
     return jsonify({'success': True, 'standard': standard, 'fee_config': cfg})
-
-@settings_bp.route('/public', methods=['GET'])
-def get_public_school_info():
-    """Publicly accessible institutional settings (school name, branding, fees, payment)."""
-    settings = get_school_settings()
-    payment_settings = get_payment_settings()
-    school_info = settings.get('school_info', {})
-    academic_year = settings.get('academic', {}).get('academic_year') or school_info.get('academic_year', '2026-2027')
-    fee_cfg = settings.get('fees', {})
-
-    return jsonify({
-        'success': True,
-        'school_info': school_info,
-        'academic_year': academic_year,
-        'standards': settings.get('academic', {}).get('standards', []),
-        'subjects': settings.get('academic', {}).get('subjects', []),
-        'exam_types': settings.get('academic', {}).get('exam_types', []),
-        'fee_types': fee_cfg.get('fee_types', []),
-        'standard_fees': fee_cfg.get('standard_fees', {}),
-        'due_date': fee_cfg.get('due_date', '2026-10-31'),
-        'payment_settings': payment_settings,
-        'general': settings.get('general', {})
-    })

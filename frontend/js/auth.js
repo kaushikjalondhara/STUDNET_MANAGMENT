@@ -391,12 +391,22 @@ const SchoolBranding = {
   setStored(data) {
     try {
       localStorage.setItem(this.CACHE_KEY, JSON.stringify(data));
+      if (data && (data.name || data.school_name)) localStorage.setItem('sms_school_name', data.name || data.school_name);
     } catch (e) {}
   },
 
   getName() {
     const stored = this.getStored();
-    return (stored && (stored.name || stored.school_name)) || 'gyan jyot vidhaya bhavan';
+    if (stored && (stored.name || stored.school_name)) {
+      const n = (stored.name || stored.school_name).trim();
+      if (!n.toLowerCase().includes('gyan jyot') && n.length > 1) return n;
+    }
+    const sideEl = document.querySelector('.sidebar-logo h2, .school-name-text');
+    if (sideEl && sideEl.textContent.trim()) {
+      const txt = sideEl.textContent.trim();
+      if (!txt.toLowerCase().includes('gyan jyot') && txt.length > 1) return txt;
+    }
+    return localStorage.getItem('sms_school_name') || 'ambaba school';
   },
 
   apply(info) {
