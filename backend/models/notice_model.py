@@ -8,6 +8,10 @@ def serialize(doc) -> dict:
     doc = dict(doc)
     if '_id' in doc:
         doc['_id'] = str(doc['_id'])
+    if 'created_at' in doc and isinstance(doc['created_at'], datetime):
+        doc['date_formatted'] = doc['created_at'].strftime("%d-%m-%Y")
+        doc['datetime_formatted'] = doc['created_at'].strftime("%d-%m-%Y %I:%M %p")
+        doc['created_at'] = doc['created_at'].isoformat()
     return doc
 
 def get_notices(standard: int = None) -> list:

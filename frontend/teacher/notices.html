@@ -118,9 +118,9 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
-<script src="../js/standard.js?v=12"></script>
+<script src="../js/api.js?v=13"></script>
+<script src="../js/auth.js?v=13"></script>
+<script src="../js/standard.js?v=13"></script>
 <script>
   if (Auth.requireTeacher() && Standard.requireActive()) {
     Auth.populateTeacherUI();
@@ -140,11 +140,26 @@
       return;
     }
 
+    function formatNoticeDate(n) {
+      if (n.date_formatted) return n.date_formatted;
+      if (!n.created_at) return 'Recent';
+      try {
+        const d = new Date(n.created_at);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          return `${dd}-${mm}-${yyyy}`;
+        }
+      } catch(e) {}
+      return String(n.created_at).split('T')[0];
+    }
+
     container.innerHTML = notices.map(n => {
       const isUrgent = n.priority === 'Urgent';
       const isEvent = n.priority === 'Event';
       const badgeClass = isUrgent ? 'badge-danger' : (isEvent ? 'badge-info' : 'badge-success');
-      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Recent';
+      const dateStr = formatNoticeDate(n);
 
       return `
         <div class="card" style="margin-bottom:16px;border-left:5px solid ${isUrgent ? '#DC2626' : '#4F46E5'}">
@@ -158,9 +173,9 @@
               <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n._id}')" style="min-height:38px">🗑️ Delete</button>
             </div>
             <p style="color:#475569;font-size:14px;line-height:1.6;margin:10px 0;word-break:break-word">${n.description}</p>
-            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:10px">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12px;color:#475569;border-top:1px solid #F1F5F9;padding-top:10px">
               <span>👤 Posted by: <b>${n.posted_by}</b></span>
-              <span>📅 Date: ${dateStr}</span>
+              <span style="font-weight:600;color:#1E293B">📅 તારીખ / Date: <b>${dateStr}</b></span>
             </div>
           </div>
         </div>

@@ -29,11 +29,13 @@ def add_notice():
 
     # Broadcast notification to students
     from models.notification_model import create_notification
+    from datetime import datetime
+    today_str = datetime.utcnow().strftime("%d-%m-%Y")
     msg_text = notice.get('content') or notice.get('description') or notice.get('title', '')
     create_notification(
         type_name='notice',
         title=f'📢 Notice: {notice.get("title")}',
-        message=f'New notice published: {msg_text[:120]}',
+        message=f'📅 તારીખ / Date: {today_str} — {msg_text[:120]}',
         standard=notice.get('standard'),
         link='notices.html'
     )

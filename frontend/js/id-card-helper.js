@@ -106,11 +106,13 @@ const IdCardHelper = {
     let address = 'Near Ring Road, Ahmedabad - 380015';
 
     try {
-      const b = JSON.parse(localStorage.getItem('sms_school_branding') || '{}');
-      if (b.trust) trust = b.trust;
-      if (b.phone || b.mobile) phone = b.phone || b.mobile;
-      if (b.email) email = b.email;
-      if (b.address) address = b.address;
+      const raw = localStorage.getItem('sms_school_branding') || '{}';
+      const b = JSON.parse(raw);
+      const info = b.school_info || b;
+      if (info.trust) trust = info.trust;
+      if (info.phone || info.mobile) phone = info.phone || info.mobile;
+      if (info.email) email = info.email;
+      if (info.address) address = info.address;
     } catch(e) {}
 
     return {

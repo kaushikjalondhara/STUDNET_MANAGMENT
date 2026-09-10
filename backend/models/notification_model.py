@@ -10,6 +10,10 @@ def serialize(doc) -> dict:
         doc['_id'] = str(doc['_id'])
     if 'student_id' in doc and isinstance(doc['student_id'], ObjectId):
         doc['student_id'] = str(doc['student_id'])
+    if 'created_at' in doc and isinstance(doc['created_at'], datetime):
+        doc['date_formatted'] = doc['created_at'].strftime("%d-%m-%Y")
+        doc['datetime_formatted'] = doc['created_at'].strftime("%d-%m-%Y %I:%M %p")
+        doc['created_at'] = doc['created_at'].isoformat()
     return doc
 
 def create_notification(type_name: str, title: str, message: str, standard: int = None, student_id: str = None, link: str = None) -> dict:

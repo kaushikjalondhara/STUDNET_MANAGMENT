@@ -276,11 +276,11 @@
 
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
-<script src="../js/standard.js?v=12"></script>
-<script src="../js/print-helper.js?v=12"></script>
-<script src="../js/id-card-helper.js?v=12"></script>
+<script src="../js/api.js?v=13"></script>
+<script src="../js/auth.js?v=13"></script>
+<script src="../js/standard.js?v=13"></script>
+<script src="../js/print-helper.js?v=13"></script>
+<script src="../js/id-card-helper.js?v=13"></script>
 <script>
   let allStudentFees = [];
   let cachedSummary = null;
@@ -475,6 +475,11 @@
   }
 
   function renderFeeWhatsAppList() {
+    const senderDisplay = document.getElementById('feeSenderDisplay');
+    if (senderDisplay && typeof IdCardHelper !== 'undefined') {
+      senderDisplay.textContent = IdCardHelper.getSchoolInfo().phone || '+91 98765 43210';
+    }
+
     const container = document.getElementById('pendingFeeStudentsList');
     if (!container) return;
 
@@ -582,6 +587,15 @@
     </div>
 
     <div class="id-card-modal-body" style="background:#fff;padding:18px">
+      <!-- Official Sender WhatsApp Info Banner -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:8px;padding:9px 13px;margin-bottom:12px;font-size:12px;color:#1E40AF">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:16px">📤</span>
+          <span><b>મોકલનાર School WhatsApp નંબર:</b> <span id="feeSenderDisplay" style="font-weight:800;color:#0F172A">+91 98765 43210</span></span>
+        </div>
+        <span style="font-size:11px;color:#1E40AF;background:#DBEAFE;padding:2px 8px;border-radius:12px;font-weight:600">School Settings મુજબ</span>
+      </div>
+
       <div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065F46">
         <b>Pre-formatted Message Includes:</b> Pending Fee Amount, Due Date (31-Oct-2026), and UPI Payment Details (<code>schoolfees@oksbi</code>).
       </div>

@@ -42,6 +42,11 @@ def send_automated_whatsapp():
     phone = clean_phone(mobile)
     db = get_db()
 
+    # Dynamically fetch official School WhatsApp number from School Settings
+    settings = db.school_settings.find_one() or {}
+    school_info = settings.get('school_info', {})
+    sender_mobile = school_info.get('mobile') or school_info.get('phone') or '+91 98765 43210'
+
     # Check for configured custom webhook/gateway in database or environment
     gateway_name = "Automated SMS/WhatsApp Direct Dispatcher"
     gateway_status = "Delivered"
@@ -52,6 +57,7 @@ def send_automated_whatsapp():
         'student_name': student_name,
         'roll_no': roll_no,
         'standard': int(standard) if standard else None,
+        'sender_mobile': sender_mobile,
         'mobile': phone,
         'alert_type': alert_type,
         'message': message,
@@ -86,6 +92,7 @@ def send_automated_whatsapp():
         'success': True,
         'message': f"Automatic alert successfully dispatched to +{phone}!",
         'recipient': phone,
+        'sender_mobile': sender_mobile,
         'student_name': student_name,
         'alert_type': alert_type,
         'status': 'Sent',
@@ -107,6 +114,10 @@ def send_batch_whatsapp():
         return jsonify({'success': False, 'error': 'Recipients list is required.'}), 400
 
     db = get_db()
+    settings = db.school_settings.find_one() or {}
+    school_info = settings.get('school_info', {})
+    sender_mobile = school_info.get('mobile') or school_info.get('phone') or '+91 98765 43210'
+
     sent_count = 0
     skipped_count = 0
 
@@ -128,6 +139,7 @@ def send_batch_whatsapp():
             'student_name': student_name,
             'roll_no': roll_no,
             'standard': int(standard) if standard else None,
+            'sender_mobile': sender_mobile,
             'mobile': phone,
             'alert_type': alert_type,
             'message': message,
@@ -153,6 +165,7 @@ def send_batch_whatsapp():
     return jsonify({
         'success': True,
         'message': f"Batch dispatch complete: {sent_count} alert(s) sent automatically, {skipped_count} skipped.",
+        'sender_mobile': sender_mobile,
         'sent_count': sent_count,
         'skipped_count': skipped_count
     }), 200

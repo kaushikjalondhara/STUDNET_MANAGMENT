@@ -111,9 +111,9 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
-<script src="../js/standard.js?v=12"></script>
+<script src="../js/api.js?v=13"></script>
+<script src="../js/auth.js?v=13"></script>
+<script src="../js/standard.js?v=13"></script>
 <script>
   if (Auth.requireTeacher() && Standard.requireActive()) {
     Auth.populateTeacherUI();
@@ -133,6 +133,21 @@
       return;
     }
 
+    function formatHwDate(h) {
+      if (h.date_formatted) return h.date_formatted;
+      if (!h.created_at) return 'Recent';
+      try {
+        const d = new Date(h.created_at);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          return `${dd}-${mm}-${yyyy}`;
+        }
+      } catch(e) {}
+      return String(h.created_at).split('T')[0];
+    }
+
     container.innerHTML = list.map(h => `
       <div class="card" style="margin-bottom:16px;border-left:5px solid #4F46E5">
         <div class="card-body" style="padding:18px 16px">
@@ -145,8 +160,9 @@
             <button class="btn btn-danger btn-sm" onclick="deleteHw('${h._id}')" style="min-height:38px">🗑️ Delete</button>
           </div>
           <p style="color:#475569;font-size:14px;line-height:1.6;margin:12px 0;word-break:break-word">${h.description}</p>
-          <div style="font-size:12px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:10px">
-            📅 Assigned on: ${h.created_at ? h.created_at.split('T')[0] : 'Recent'}
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:#475569;border-top:1px solid #F1F5F9;padding-top:10px">
+            <span>📅 આપેલ તારીખ / Assigned on: <b>${formatHwDate(h)}</b></span>
+            <span style="color:#DC2626;font-weight:600">⏰ જમા તારીખ / Due: <b>${h.due_date || 'N/A'}</b></span>
           </div>
         </div>
       </div>

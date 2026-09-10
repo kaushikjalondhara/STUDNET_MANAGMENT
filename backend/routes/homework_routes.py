@@ -39,10 +39,13 @@ def add_homework():
     
     # Broadcast notification to students in standard
     from models.notification_model import create_notification
+    from datetime import datetime
+    today_str = datetime.utcnow().strftime("%d-%m-%Y")
+    due_str = data.get("due_date", "Soon")
     create_notification(
         type_name='homework',
         title=f'📚 New Homework: {data.get("subject", "General")}',
-        message=f'New homework added: {data["title"]} (Due: {data.get("due_date", "Soon")})',
+        message=f'📅 Assigned on: {today_str} | ⏰ Due: {due_str} — {data["title"]}',
         standard=std,
         link='homework.html'
     )

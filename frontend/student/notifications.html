@@ -111,8 +111,8 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
+<script src="../js/api.js?v=13"></script>
+<script src="../js/auth.js?v=13"></script>
 <script>
   if (Auth.requireStudent()) {
     Auth.populateStudentUI();
@@ -149,10 +149,30 @@
       general: '🔔'
     };
 
+    function formatNotifDate(n) {
+      if (n.datetime_formatted) return n.datetime_formatted;
+      if (n.date_formatted) return n.date_formatted;
+      if (!n.created_at) return 'Today';
+      try {
+        const d = new Date(n.created_at);
+        if (!isNaN(d.getTime())) {
+          const dd = String(d.getDate()).padStart(2, '0');
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const yyyy = d.getFullYear();
+          let hours = d.getHours();
+          const ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          const mins = String(d.getMinutes()).padStart(2, '0');
+          return `${dd}-${mm}-${yyyy} ${hours}:${mins} ${ampm}`;
+        }
+      } catch(e) {}
+      return String(n.created_at).split('T')[0];
+    }
+
     container.innerHTML = list.map(n => {
       const type = n.type || 'general';
       const icon = typeIcons[type] || '🔔';
-      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Today';
+      const dateStr = formatNotifDate(n);
 
       return `
         <div class="notif-card ${!n.read ? 'unread' : ''}" onclick="openNotification('${n._id}', '${n.link || ''}')">
@@ -160,7 +180,7 @@
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;margin-bottom:4px">
               <h4 style="font-size:15px;font-weight:700;color:#1E293B;margin:0;word-break:break-word">${n.title}</h4>
-              <span style="font-size:12px;color:#94A3B8">📅 ${dateStr}</span>
+              <span style="font-size:12px;color:#475569;font-weight:600;background:#F1F5F9;padding:2px 8px;border-radius:4px">📅 ${dateStr}</span>
             </div>
             <p style="font-size:13px;color:#475569;margin:0 0 6px;word-break:break-word">${n.message}</p>
             ${n.link ? `<a href="${n.link}" class="btn btn-outline btn-sm" style="display:inline-block;padding:3px 10px;font-size:11px">View Details →</a>` : ''}
