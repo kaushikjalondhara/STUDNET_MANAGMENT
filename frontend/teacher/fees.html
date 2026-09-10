@@ -276,11 +276,11 @@
 
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=13"></script>
-<script src="../js/auth.js?v=13"></script>
-<script src="../js/standard.js?v=13"></script>
-<script src="../js/print-helper.js?v=13"></script>
-<script src="../js/id-card-helper.js?v=13"></script>
+<script src="../js/api.js?v=14"></script>
+<script src="../js/auth.js?v=14"></script>
+<script src="../js/standard.js?v=14"></script>
+<script src="../js/print-helper.js?v=14"></script>
+<script src="../js/id-card-helper.js?v=14"></script>
 <script>
   let allStudentFees = [];
   let cachedSummary = null;
@@ -381,7 +381,7 @@
     }
   }
 
-  async function sendStudentFeeWhatsApp(studentId, btn) {
+  async function sendStudentFeeWhatsApp(studentId, btn, openWhatsApp = true) {
     const s = allStudentFees.find(item => String(item.student_id) === String(studentId));
     if (!s) return;
     const feeInfo = {
@@ -390,7 +390,7 @@
       upi_id: 'schoolfees@oksbi'
     };
     if (typeof IdCardHelper !== 'undefined') {
-      await IdCardHelper.sendWhatsAppFee(s, feeInfo, activeFeeLang, btn);
+      await IdCardHelper.sendWhatsAppFee(s, feeInfo, activeFeeLang, btn, openWhatsApp);
     }
   }
 
@@ -519,12 +519,19 @@
                 <td style="padding:8px 10px;text-align:right;font-weight:700;color:#DC2626">₹${Number(s.pending_amount || 0).toLocaleString('en-IN')}</td>
                 <td style="padding:8px 10px;color:#334155">${s.mobile || '<span style="color:#DC2626">No mobile</span>'}</td>
                 <td style="padding:8px 10px;text-align:center">
-                  <button type="button" class="btn btn-outline btn-sm"
-                    onclick="sendStudentFeeWhatsApp('${s.student_id}', this)"
-                    ${!hasMobile ? 'disabled style="opacity:0.5"' : ''}
-                    style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:3px 8px;font-size:11px;font-weight:600">
-                    📲 Send Alert
-                  </button>
+                  <div style="display:flex;gap:4px;justify-content:center">
+                    <button type="button" class="btn btn-outline btn-sm"
+                      onclick="sendStudentFeeWhatsApp('${s.student_id}', this, true)"
+                      ${!hasMobile ? 'disabled style="opacity:0.5"' : ''}
+                      style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:3px 8px;font-size:11px;font-weight:700" title="વાલીના WhatsApp પર ફી રીમાઇન્ડર મોકલો">
+                      📲 WhatsApp
+                    </button>
+                    <button type="button" class="btn btn-outline btn-sm"
+                      onclick="sendStudentFeeWhatsApp('${s.student_id}', this, false)"
+                      style="padding:3px 7px;font-size:11px" title="In-App પોર્ટલ નોટિસ મોકલો">
+                      🔔 In-App
+                    </button>
+                  </div>
                 </td>
               </tr>
             `;
@@ -552,14 +559,14 @@
         due_date: '31-Oct-2026',
         upi_id: 'schoolfees@oksbi'
       };
-      const ok = await IdCardHelper.sendWhatsAppFee(s, feeInfo, activeFeeLang);
+      const ok = await IdCardHelper.sendWhatsAppFee(s, feeInfo, activeFeeLang, null, false);
       if (ok) sentCount++;
     }
     if (btnAll) {
       btnAll.disabled = false;
-      btnAll.textContent = `✅ Sent (${sentCount})`;
+      btnAll.textContent = `✅ Sent In-App (${sentCount})`;
     }
-    Toast.success(`Sent automatic fee alerts to ${sentCount} parents!`);
+    Toast.success(`બધા ${sentCount} વિદ્યાર્થીઓને In-App ફી નોટિસ મોકલાઈ ગઈ છે! વાલીના WhatsApp પર મોકલવા 📲 WhatsApp બટન વાપરો.`);
     renderFeeWhatsAppList();
   }
 
@@ -597,7 +604,8 @@
       </div>
 
       <div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065F46">
-        <b>Pre-formatted Message Includes:</b> Pending Fee Amount, Due Date (31-Oct-2026), and UPI Payment Details (<code>schoolfees@oksbi</code>).
+        <b>💡 વાલીના WhatsApp પર ફી રીમાઇન્ડર મોકલવા માટે:</b><br/>
+        નીચે લિસ્ટમાંથી <b>📲 WhatsApp</b> બટન દબાવો. WhatsApp ઓપન થશે અને ગ્રીન <b>Send</b> બટન દબાવતા જ ફી, છેલ્લી તારીખ (31-Oct-2026) અને UPI ID (<code>schoolfees@oksbi</code>) સાથેનો મેસેજ વાલીના ફોનમાં પહોંચી જશે.
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -614,10 +622,10 @@
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid #E2E8F0;background:#F8FAFC">
-      <span style="font-size:11.5px;color:#047857;font-weight:600">⚡ Automated Alerts: Sent instantly in background without opening WhatsApp window.</span>
+      <span style="font-size:11.5px;color:#047857;font-weight:600">💡 વાલીના WhatsApp પર મેસેજ પહોંચાડવા લિસ્ટમાંથી 📲 WhatsApp દબાવો.</span>
       <div style="display:flex;gap:8px">
-        <button type="button" class="btn btn-outline btn-sm" id="btnSendAllPending" onclick="sendAllPendingFeeAlerts()" style="color:#047857;border-color:#10B981;background:#ECFDF5;font-weight:700">
-          ⚡ Send to All Pending
+        <button type="button" class="btn btn-outline btn-sm" id="btnSendAllPending" onclick="sendAllPendingFeeAlerts()" style="color:#1E40AF;border-color:#93C5FD;background:#EFF6FF;font-weight:700" title="બધાને In-App નોટિસ મોકલો">
+          🔔 Send All (In-App)
         </button>
         <button type="button" class="btn btn-primary btn-sm" onclick="closeFeeWhatsAppModal()">Done</button>
       </div>

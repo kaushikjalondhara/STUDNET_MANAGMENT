@@ -128,10 +128,14 @@ const IdCardHelper = {
     };
   },
 
-  // ─── 1. Automated Absence Alert (No WhatsApp window opened!) ─────────────
-  async sendWhatsAppAbsence(student, dateStr, lang = 'gu', btn = null) {
-    const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
-    const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
+  // ─── 1. WhatsApp Absence Alert (Opens Real WhatsApp & Syncs In-App) ─────
+  async sendWhatsAppAbsence(student, dateStr, lang = 'gu', btn = null, openWhatsApp = true) {
+    let cleanMobile = (student.mobile || '').replace(/[^0-9]/g, '');
+    if (cleanMobile.length === 11 && cleanMobile.startsWith('0')) {
+      cleanMobile = '91' + cleanMobile.slice(1);
+    } else if (cleanMobile.length === 10) {
+      cleanMobile = '91' + cleanMobile;
+    }
     const school = this.getSchoolInfo();
     const formattedDate = dateStr || new Date().toLocaleDateString('en-GB');
     const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '');
@@ -182,9 +186,15 @@ const IdCardHelper = {
       return false;
     }
 
+    // 1. Open Real WhatsApp so message actually delivers to student's phone
+    if (openWhatsApp) {
+      const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '✅ Sent';
+      btn.textContent = openWhatsApp ? '✅ Opened' : '✅ Sent';
       btn.style.background = '#DEF7EC';
       btn.style.color = '#03543F';
       btn.style.borderColor = '#31C48D';
@@ -208,15 +218,23 @@ const IdCardHelper = {
     }
 
     if (typeof Toast !== 'undefined') {
-      Toast.success(`✅ Alert message sent to ${student.name} (+${cleanMobile})!`);
+      if (openWhatsApp) {
+        Toast.success(`📲 WhatsApp ઓપન થઈ ગયું છે! Send બટન દબાવતા જ ${student.name} ના વાલીને મેસેજ પહોંચી જશે.`);
+      } else {
+        Toast.success(`✅ In-app absence alert sent to ${student.name} (+${cleanMobile})!`);
+      }
     }
     return true;
   },
 
-  // ─── 2. Automated Fee Reminder (No WhatsApp window opened!) ──────────────
-  async sendWhatsAppFee(student, feeDetails, lang = 'gu', btn = null) {
-    const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
-    const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
+  // ─── 2. WhatsApp Fee Reminder (Opens Real WhatsApp & Syncs In-App) ────────
+  async sendWhatsAppFee(student, feeDetails, lang = 'gu', btn = null, openWhatsApp = true) {
+    let cleanMobile = (student.mobile || '').replace(/[^0-9]/g, '');
+    if (cleanMobile.length === 11 && cleanMobile.startsWith('0')) {
+      cleanMobile = '91' + cleanMobile.slice(1);
+    } else if (cleanMobile.length === 10) {
+      cleanMobile = '91' + cleanMobile;
+    }
     const school = this.getSchoolInfo();
     const pending = Number(student.pending_amount || feeDetails?.pending_amount || 0).toLocaleString('en-IN');
     const dueDate = feeDetails?.due_date || '31-Oct-2026';
@@ -283,9 +301,15 @@ const IdCardHelper = {
       return false;
     }
 
+    // 1. Open Real WhatsApp so message actually delivers to student's phone
+    if (openWhatsApp) {
+      const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
+      window.open(waUrl, '_blank');
+    }
+
     if (btn) {
       btn.disabled = false;
-      btn.textContent = '✅ Sent';
+      btn.textContent = openWhatsApp ? '✅ Opened' : '✅ Sent';
       btn.style.background = '#DEF7EC';
       btn.style.color = '#03543F';
       btn.style.borderColor = '#31C48D';
@@ -309,7 +333,11 @@ const IdCardHelper = {
     }
 
     if (typeof Toast !== 'undefined') {
-      Toast.success(`✅ Fee reminder sent to ${student.name} (+${cleanMobile})!`);
+      if (openWhatsApp) {
+        Toast.success(`📲 WhatsApp ઓપન થઈ ગયું છે! Send બટન દબાવતા જ ${student.name} ના વાલીને ફી મેસેજ પહોંચી જશે.`);
+      } else {
+        Toast.success(`✅ In-app fee reminder sent to ${student.name} (+${cleanMobile})!`);
+      }
     }
     return true;
   },
