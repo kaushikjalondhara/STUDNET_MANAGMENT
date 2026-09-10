@@ -31,5 +31,9 @@ def create_homework(data: dict) -> dict:
 
 def delete_homework(hw_id: str) -> bool:
     db = get_db()
-    res = db.homework.delete_one({'_id': ObjectId(hw_id)})
+    try:
+        oid = ObjectId(hw_id)
+    except Exception:
+        return False
+    res = db.homework.delete_one({'_id': oid})
     return res.deleted_count > 0

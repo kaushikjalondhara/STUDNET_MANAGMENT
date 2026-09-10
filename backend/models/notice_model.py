@@ -38,5 +38,9 @@ def create_notice(data: dict) -> dict:
 
 def delete_notice(notice_id: str) -> bool:
     db = get_db()
-    res = db.notices.delete_one({'_id': ObjectId(notice_id)})
+    try:
+        oid = ObjectId(notice_id)
+    except Exception:
+        return False
+    res = db.notices.delete_one({'_id': oid})
     return res.deleted_count > 0

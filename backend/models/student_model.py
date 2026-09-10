@@ -23,7 +23,11 @@ def get_students_by_standard(standard: int) -> list:
 
 def get_student_by_id(student_id: str) -> dict | None:
     db = get_db()
-    doc = db.students.find_one({'_id': ObjectId(student_id)})
+    try:
+        oid = ObjectId(student_id)
+    except Exception:
+        return None
+    doc = db.students.find_one({'_id': oid})
     return serialize(doc)
 
 def find_student_by_roll(roll_no: int) -> dict | None:
@@ -60,7 +64,7 @@ def create_student(data: dict) -> dict:
     # Automatically initialize standard-wise configured fee structure for new student
     try:
         from models.fee_model import get_or_create_student_fee
-        get_or_create_student_fee(str(result.inserted_id), int(data['standard']))
+        get_or_create_student_fee(doc['_id'], int(data['standard']))
     except Exception as e:
         print("  → Note: fee init deferred:", e)
 
@@ -68,6 +72,10 @@ def create_student(data: dict) -> dict:
 
 def update_student(student_id: str, data: dict) -> dict | None:
     db = get_db()
+    try:
+        oid = ObjectId(student_id)
+    except Exception:
+        return None
     allowed = {k: v for k, v in data.items() if k in ('name', 'email', 'mobile', 'roll_no', 'photo', 'photo_url')}
     if 'roll_no' in allowed:
         allowed['roll_no'] = int(allowed['roll_no'])
@@ -85,12 +93,16 @@ def update_student(student_id: str, data: dict) -> dict | None:
         allowed['password_hash'] = _bcrypt.hashpw(
             pw_str.encode('utf-8'), _bcrypt.gensalt()
         ).decode('utf-8')
-    db.students.update_one({'_id': ObjectId(student_id)}, {'$set': allowed})
+    db.students.update_one({'_id': oid}, {'$set': allowed})
     return get_student_by_id(student_id)
 
 def delete_student(student_id: str) -> bool:
     db = get_db()
-    result = db.students.delete_one({'_id': ObjectId(student_id)})
+    try:
+        oid = ObjectId(student_id)
+    except Exception:
+        return False
+    result = db.students.delete_one({'_id': oid})
     return result.deleted_count > 0
 
 def count_by_standard(standard: int) -> int:
