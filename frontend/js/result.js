@@ -105,14 +105,25 @@ function renderResults(results) {
   }).join('');
 }
 
-function triggerResultHallTicket(studentId, name, rollNo) {
+async function triggerResultHallTicket(studentId, name, rollNo) {
   if (typeof IdCardHelper !== 'undefined') {
-    IdCardHelper.showHallTicket({
+    const std = typeof Standard !== 'undefined' ? Standard.getActive() : 1;
+    const studentObj = {
       _id: studentId,
       name: name,
       roll_no: rollNo,
-      standard: Standard.getActive()
-    });
+      standard: std
+    };
+    try {
+      if (typeof Api !== 'undefined') {
+        const { ok, data } = await Api.getHallTicketConfig(std);
+        if (ok && data?.config) {
+          IdCardHelper.showHallTicket(studentObj, data.config);
+          return;
+        }
+      }
+    } catch(e) {}
+    IdCardHelper.showHallTicket(studentObj);
   }
 }
 

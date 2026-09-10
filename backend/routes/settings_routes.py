@@ -4,7 +4,9 @@ from middleware.auth_middleware import teacher_required
 from models.settings_model import (
     verify_management_password, is_valid_management_token,
     change_management_password, get_school_settings,
-    update_school_settings, get_standard_fee_config
+    update_school_settings, get_standard_fee_config,
+    get_standard_hall_ticket_config, update_standard_hall_ticket_config,
+    copy_hall_ticket_config_to_all
 )
 from models.fee_model import get_payment_settings
 
@@ -103,3 +105,41 @@ def update_category(category):
 def get_fee_config(standard):
     cfg = get_standard_fee_config(standard)
     return jsonify({'success': True, 'standard': standard, 'fee_config': cfg})
+
+@settings_bp.route('/hall-ticket/<int:standard>', methods=['GET'])
+@jwt_required()
+def get_hall_ticket(standard):
+    """Fetch hall ticket configuration and timetable for a specific standard (student or teacher)."""
+    cfg = get_standard_hall_ticket_config(standard)
+    return jsonify({'success': True, 'standard': standard, 'config': cfg})
+
+@settings_bp.route('/hall-ticket/<int:standard>', methods=['PUT', 'POST'])
+@teacher_required
+def update_hall_ticket(standard):
+    """Update hall ticket schedule and publish status for a specific standard."""
+    mgmt_token = request.headers.get('X-Management-Token') or (request.get_json(silent=True) or {}).get('management_token')
+    if not is_valid_management_token(mgmt_token):
+        return jsonify({'success': False, 'error': 'Management authorization required. Please verify management password.'}), 403
+
+    data = request.get_json(silent=True) or {}
+    updated = update_standard_hall_ticket_config(standard, data)
+    return jsonify({
+        'success': True,
+        'message': f'Hall ticket configuration saved for Standard {standard}.',
+        'standard': standard,
+        'config': updated
+    })
+
+@settings_bp.route('/hall-ticket/copy-all', methods=['POST'])
+@teacher_required
+def copy_hall_ticket_all():
+    """Copy a standard's hall ticket schedule to all other standards (1-12)."""
+    mgmt_token = request.headers.get('X-Management-Token') or (request.get_json(silent=True) or {}).get('management_token')
+    if not is_valid_management_token(mgmt_token):
+        return jsonify({'success': False, 'error': 'Management authorization required.'}), 403
+
+    data = request.get_json(silent=True) or {}
+    source_std = data.get('source_standard', 1)
+    res = copy_hall_ticket_config_to_all(source_std)
+    return jsonify(res)
+

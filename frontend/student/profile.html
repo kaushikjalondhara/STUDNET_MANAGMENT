@@ -118,11 +118,11 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
-<script src="../js/standard.js?v=12"></script>
-<script src="../js/id-card-helper.js?v=12"></script>
-<script src="../js/student.js?v=10"></script>
+<script src="../js/api.js?v=13"></script>
+<script src="../js/auth.js?v=13"></script>
+<script src="../js/standard.js?v=13"></script>
+<script src="../js/id-card-helper.js?v=13"></script>
+<script src="../js/student.js?v=13"></script>
 <script>
   initStudentProfile();
 
@@ -147,27 +147,7 @@
     }
   }
 
-  async function openMyHallTicket() {
-    if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
-      IdCardHelper.showHallTicket(window.myStudentProfile);
-    } else {
-      if (typeof Toast !== 'undefined') Toast.info('Loading Hall Ticket details…');
-      try {
-        const { ok, data } = await Api.myProfile();
-        if (ok && data.student) {
-          window.myStudentProfile = data.student;
-          if (typeof IdCardHelper !== 'undefined') {
-            IdCardHelper.showHallTicket(data.student);
-          }
-        } else {
-          if (typeof Toast !== 'undefined') Toast.error('Failed to load profile.');
-        }
-      } catch (err) {
-        if (typeof Toast !== 'undefined') Toast.error('Error opening Hall Ticket.');
-      }
-    }
-  }
-
+  // Uses window.openMyHallTicket defined in student.js with standard-wise permission checks!
   async function uploadMyProfilePhoto(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];

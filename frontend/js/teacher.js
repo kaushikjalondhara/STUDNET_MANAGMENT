@@ -149,9 +149,19 @@ function showStudentIdCard(studentId) {
   }
 }
 
-function showStudentHallTicket(studentId) {
+async function showStudentHallTicket(studentId) {
   const s = (window.cachedStudentsList || []).find(item => String(item._id) === String(studentId));
   if (s && typeof IdCardHelper !== 'undefined') {
+    const std = s.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : 1);
+    try {
+      if (typeof Api !== 'undefined') {
+        const { ok, data } = await Api.getHallTicketConfig(std);
+        if (ok && data?.config) {
+          IdCardHelper.showHallTicket(s, data.config);
+          return;
+        }
+      }
+    } catch(e) {}
     IdCardHelper.showHallTicket(s);
   } else {
     Toast.error('Student details not found.');

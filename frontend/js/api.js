@@ -255,6 +255,15 @@ const Api = {
   getPublicSchoolInfo() {
     return this.get('/settings/public');
   },
+  getHallTicketConfig(standard) {
+    return this.get(`/settings/hall-ticket/${standard}`);
+  },
+  updateHallTicketConfig(standard, data) {
+    return this.put(`/settings/hall-ticket/${standard}`, data);
+  },
+  copyHallTicketConfig(sourceStandard) {
+    return this.post('/settings/hall-ticket/copy-all', { source_standard: sourceStandard });
+  },
 
   // ─── File Download & Bulk Import Helpers ──────────────────────────────────
   async downloadFile(path, defaultFilename) {

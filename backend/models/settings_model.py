@@ -146,6 +146,33 @@ def change_management_password(old_password: str, new_password: str) -> tuple[bo
     )
     return True, 'Management password updated successfully. Please login again.'
 
+def get_default_hall_ticket_schedule(standard: int = 1) -> list:
+    std = int(standard)
+    room = f"Room 10{((std - 1) % 4) + 1}"
+    return [
+        {'date': '2026-10-15', 'day': 'Thursday',  'subject': 'Mathematics',      'time': '09:00 AM - 12:00 PM', 'room': room},
+        {'date': '2026-10-17', 'day': 'Saturday',  'subject': 'Science & Tech',   'time': '09:00 AM - 12:00 PM', 'room': room},
+        {'date': '2026-10-19', 'day': 'Monday',    'subject': 'English Language', 'time': '09:00 AM - 12:00 PM', 'room': room},
+        {'date': '2026-10-21', 'day': 'Wednesday', 'subject': 'Social Science',   'time': '09:00 AM - 12:00 PM', 'room': room},
+        {'date': '2026-10-23', 'day': 'Friday',    'subject': 'Gujarati / Hindi', 'time': '09:00 AM - 12:00 PM', 'room': room},
+        {'date': '2026-10-26', 'day': 'Monday',    'subject': 'Computer & AI',    'time': '09:00 AM - 11:30 AM', 'room': 'Computer Lab 1'},
+    ]
+
+def get_default_hall_ticket_config(standard: int = 1) -> dict:
+    std = int(standard)
+    title = 'Annual Board Examination 2026-27' if std in [10, 12] else f'Standard {std} Annual Examination 2026-27'
+    return {
+        'enabled': True,
+        'exam_title': title,
+        'instructions': (
+            "1. Candidates must carry this Hall Ticket and School ID Card into the examination hall daily.\n"
+            "2. Reach the examination room at least 15 minutes before the scheduled commencement time.\n"
+            "3. Electronic devices, smartphones, smartwatches, and study notes are strictly forbidden.\n"
+            "4. Maintain pin-drop silence; unfair means will result in immediate disqualification."
+        ),
+        'schedule': get_default_hall_ticket_schedule(std)
+    }
+
 # ─── Default School Settings ─────────────────────────────────────────────────
 
 DEFAULT_SCHOOL_SETTINGS = {
@@ -261,6 +288,12 @@ DEFAULT_SCHOOL_SETTINGS = {
         'currency': '₹',
         'receipt_prefix': 'REC-2026-',
         'working_days': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    },
+    'hall_ticket': {
+        'standards': {
+            str(i): get_default_hall_ticket_config(i)
+            for i in range(1, 13)
+        }
     }
 }
 
@@ -427,3 +460,84 @@ def is_notification_enabled(notification_type: str) -> bool:
         return bool(notifs.get(key, True))
     except Exception:
         return True
+
+# ─── Standard-wise Hall Ticket Configuration ─────────────────────────────────
+
+def get_standard_hall_ticket_config(standard: int) -> dict:
+    """Get hall ticket settings and schedule for a specific standard."""
+    settings = get_school_settings()
+    ht_cfg = settings.get('hall_ticket', {})
+    std_str = str(int(standard))
+    std_data = ht_cfg.get('standards', {}).get(std_str)
+    if not std_data:
+        std_data = get_default_hall_ticket_config(int(standard))
+    return std_data
+
+def update_standard_hall_ticket_config(standard: int, data: dict) -> dict:
+    """Save/update hall ticket settings and schedule for a specific standard."""
+    db = get_db()
+    std_str = str(int(standard))
+    settings = get_school_settings()
+    ht_cfg = settings.get('hall_ticket', {})
+    if 'standards' not in ht_cfg or not isinstance(ht_cfg['standards'], dict):
+        ht_cfg['standards'] = {}
+
+    current_std = ht_cfg['standards'].get(std_str) or get_default_hall_ticket_config(int(standard))
+    
+    exam_title = data.get('exam_title')
+    if not exam_title or not str(exam_title).strip():
+        exam_title = current_std.get('exam_title', f'Standard {standard} Examination')
+
+    updated_record = {
+        'enabled': bool(data.get('enabled', True)),
+        'exam_title': str(exam_title).strip(),
+        'instructions': str(data.get('instructions', current_std.get('instructions', ''))).strip(),
+        'schedule': data.get('schedule', current_std.get('schedule', [])),
+        'updated_at': datetime.utcnow()
+    }
+
+    db.school_settings.update_one(
+        {},
+        {
+            '$set': {
+                f'hall_ticket.standards.{std_str}': updated_record,
+                'updated_at': datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    return updated_record
+
+def copy_hall_ticket_config_to_all(source_standard: int) -> dict:
+    """Copies the exam title, instructions, and schedule from source_standard to all standards 1-12."""
+    db = get_db()
+    source_cfg = get_standard_hall_ticket_config(source_standard)
+    std_schedule = source_cfg.get('schedule', [])
+
+    updates = {}
+    for i in range(1, 13):
+        if i == int(source_standard):
+            continue
+        std_str = str(i)
+        room = f"Room 10{((i - 1) % 4) + 1}"
+        adj_schedule = []
+        for row in std_schedule:
+            row_copy = dict(row)
+            if 'Room' in row_copy.get('room', ''):
+                row_copy['room'] = room
+            adj_schedule.append(row_copy)
+
+        title = 'Annual Board Examination 2026-27' if i in [10, 12] else f'Standard {i} Annual Examination 2026-27'
+        cfg = {
+            'enabled': source_cfg.get('enabled', True),
+            'exam_title': source_cfg.get('exam_title') or title,
+            'instructions': source_cfg.get('instructions', ''),
+            'schedule': adj_schedule,
+            'updated_at': datetime.utcnow()
+        }
+        updates[f'hall_ticket.standards.{std_str}'] = cfg
+
+    updates['updated_at'] = datetime.utcnow()
+    db.school_settings.update_one({}, {'$set': updates}, upsert=True)
+    return {'success': True, 'message': f'Hall ticket schedule from Standard {source_standard} successfully copied to all standards!'}
+

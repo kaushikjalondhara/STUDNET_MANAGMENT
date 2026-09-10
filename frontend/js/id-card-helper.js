@@ -413,10 +413,27 @@ const IdCardHelper = {
   },
 
   // ─── 4. Exam Hall Ticket Modal ────────────────────────────────────────────
-  showHallTicket(student, examTitle = 'Annual Board Examination 2026-27') {
+  showHallTicket(student, options = {}) {
     const school = this.getSchoolInfo();
     const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : 1);
     const sid = student._id || student.student_id || student.roll_no;
+    
+    // Support options as string (examTitle) or object ({ exam_title, schedule, instructions })
+    let examTitle = typeof options === 'string' ? options : (options.exam_title || options.examTitle || `Standard ${std} Examination 2026-27`);
+    let instructions = typeof options === 'object' ? (options.instructions || '') : '';
+    let subjects = (typeof options === 'object' && Array.isArray(options.schedule) && options.schedule.length) ? options.schedule : null;
+
+    if (!subjects || !subjects.length) {
+      subjects = [
+        { date: '15-10-2026', day: 'Thursday',  sub: 'Mathematics',      time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
+        { date: '17-10-2026', day: 'Saturday',  sub: 'Science & Tech',   time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
+        { date: '19-10-2026', day: 'Monday',    sub: 'English Language', time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
+        { date: '21-10-2026', day: 'Wednesday', sub: 'Social Science',   time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
+        { date: '23-10-2026', day: 'Friday',    sub: 'Gujarati / Hindi', time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
+        { date: '26-10-2026', day: 'Monday',    sub: 'Computer & AI',    time: '09:00 AM - 11:30 AM', room: `Computer Lab 1` },
+      ];
+    }
+
     const qrPayload = {
       school: school.name,
       admitCard: 'EXAM_VERIFIED',
@@ -429,15 +446,6 @@ const IdCardHelper = {
     const qrUrl = this.getQRCodeUrl(qrPayload, 140);
     const photoUrl = this.getStudentPhotoUrl(student);
     const modalId = 'hallTicketModal_' + Date.now();
-
-    const subjects = [
-      { date: '15-10-2026', day: 'Thursday',  sub: 'Mathematics',      time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
-      { date: '17-10-2026', day: 'Saturday',  sub: 'Science & Tech',   time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
-      { date: '19-10-2026', day: 'Monday',    sub: 'English Language', time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
-      { date: '21-10-2026', day: 'Wednesday', sub: 'Social Science',   time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
-      { date: '23-10-2026', day: 'Friday',    sub: 'Gujarati / Hindi', time: '09:00 AM - 12:00 PM', room: `Room 10${(student.roll_no % 4) + 1}` },
-      { date: '26-10-2026', day: 'Monday',    sub: 'Computer & AI',    time: '09:00 AM - 11:30 AM', room: `Computer Lab 1` },
-    ];
 
     const modalHtml = `
       <div id="${modalId}" class="id-card-modal-backdrop" onclick="if(event.target===this) IdCardHelper.closeModal('${modalId}')">
@@ -511,10 +519,10 @@ const IdCardHelper = {
                   <tbody>
                     ${subjects.map(s => `
                       <tr>
-                        <td style="font-weight:600">${s.date} <small>(${s.day})</small></td>
-                        <td><b>${s.sub}</b></td>
-                        <td>${s.time}</td>
-                        <td>${s.room}</td>
+                        <td style="font-weight:600">${s.date || ''} <small>(${s.day || ''})</small></td>
+                        <td><b>${s.subject || s.sub || 'Subject'}</b></td>
+                        <td>${s.time || s.timing || '09:00 AM - 12:00 PM'}</td>
+                        <td>${s.room || 'Room 101'}</td>
                         <td class="sign-cell"></td>
                       </tr>
                     `).join('')}
@@ -525,12 +533,14 @@ const IdCardHelper = {
               <!-- RULES -->
               <div class="ticket-rules">
                 <b>Candidate Instructions & Exam Guidelines:</b>
+                ${instructions ? `<div style="white-space:pre-line;margin-top:5px;line-height:1.6">${instructions}</div>` : `
                 <ol>
                   <li>Candidates must carry this Hall Ticket and School ID Card into the examination hall daily.</li>
                   <li>Reach the examination room at least 15 minutes before the scheduled commencement time.</li>
                   <li>Electronic devices, smartphones, smartwatches, and study notes are strictly forbidden.</li>
                   <li>Maintain pin-drop silence; unfair means will result in immediate disqualification.</li>
                 </ol>
+                `}
               </div>
 
               <!-- SIGNATURES -->

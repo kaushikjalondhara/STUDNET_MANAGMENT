@@ -309,6 +309,9 @@ input:checked + .slider:before {
       <a class="nav-link" onclick="selectSection('general', this)">
         <span class="nav-icon">📄</span> 10. General Settings
       </a>
+      <a class="nav-link" onclick="selectSection('hall_ticket', this)">
+        <span class="nav-icon">🎫</span> 11. Hall Ticket Settings
+      </a>
 
       <div class="nav-section-label" style="margin-top:14px">Management Security</div>
       <a class="nav-link" onclick="selectSection('security', this)">
@@ -363,6 +366,7 @@ input:checked + .slider:before {
       <div class="cat-chip" onclick="selectSection('notifications', this)">🔔 8. Notifications</div>
       <div class="cat-chip" onclick="selectSection('notices', this)">📢 9. Notices</div>
       <div class="cat-chip" onclick="selectSection('general', this)">📄 10. General</div>
+      <div class="cat-chip" onclick="selectSection('hall_ticket', this)">🎫 11. Hall Ticket</div>
       <div class="cat-chip" onclick="selectSection('security', this)">🔐 Password</div>
     </div>
 
@@ -972,7 +976,119 @@ input:checked + .slider:before {
         </div>
       </div>
 
-      <!-- 11. Management Password Security -->
+      <!-- 11. Hall Ticket Settings -->
+      <div class="settings-panel" id="panel-hall_ticket">
+        <div class="card settings-card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div>
+              <span class="card-title">🎫 Exam Hall Ticket Settings (ધોરણ મુજબ હોલ ટિકિટ સેટિંગ્સ)</span>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                Configure standard-wise examination timetable, publish status, and admit card guidelines
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button type="button" class="btn btn-outline btn-sm" onclick="copyCurrentHtScheduleToAll()">📋 Copy Schedule to All Standards</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="saveHallTicketConfig()">💾 Save Hall Ticket</button>
+            </div>
+          </div>
+          <div class="card-body">
+            <form id="form-hall_ticket" onsubmit="event.preventDefault(); saveHallTicketConfig()">
+              <!-- Standard Selector & Publish Control Grid -->
+              <div style="background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:20px">
+                <div class="form-grid" style="align-items:center">
+                  <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label" style="font-size:13px;font-weight:700;color:var(--primary-dark)">
+                      📚 Select Standard to Configure (ધોરણ પસંદ કરો):
+                    </label>
+                    <select class="form-control" id="ht_select_standard" onchange="onHallTicketStandardChange()" style="font-weight:700;font-size:14px;border-color:var(--primary)">
+                      <option value="1">Standard 1 (ધોરણ ૧)</option>
+                      <option value="2">Standard 2 (ધોરણ ૨)</option>
+                      <option value="3">Standard 3 (ધોરણ ૩)</option>
+                      <option value="4">Standard 4 (ધોરણ ૪)</option>
+                      <option value="5">Standard 5 (ધોરણ ૫)</option>
+                      <option value="6">Standard 6 (ધોરણ ૬)</option>
+                      <option value="7">Standard 7 (ધોરણ ૭)</option>
+                      <option value="8">Standard 8 (ધોરણ ૮)</option>
+                      <option value="9">Standard 9 (ધોરણ ૯)</option>
+                      <option value="10">Standard 10 (ધોરણ ૧૦ - SSC)</option>
+                      <option value="11">Standard 11 (ધોરણ ૧૧)</option>
+                      <option value="12">Standard 12 (ધોરણ ૧૨ - HSC)</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label" style="font-size:13px;font-weight:700">
+                      📢 Publication / Download Status (વિદ્યાર્થી ડાઉનલોડ મંજૂરી):
+                    </label>
+                    <div style="display:flex;align-items:center;gap:12px;margin-top:6px;background:#fff;padding:8px 14px;border:1px solid #CBD5E1;border-radius:6px">
+                      <label class="switch" style="margin-bottom:0">
+                        <input type="checkbox" id="ht_enabled" checked onchange="updateHtStatusBadge()">
+                        <span class="slider"></span>
+                      </label>
+                      <span id="ht_status_text" style="font-weight:700;font-size:13px;color:#15803D">
+                        ✅ Published (વિદ્યાર્થી ડાઉનલોડ કરી શકશે)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="font-size:12px;color:#64748B;margin-top:10px">
+                  ℹ️ <b>નોંધ:</b> જ્યારે આ ટોગલ <b>ચાલુ (ON)</b> હશે, ત્યારે જ પસંદ કરેલા ધોરણના વિદ્યાર્થીઓ તેમના પોર્ટલમાંથી હોલ ટિકિટ ડાઉનલોડ કરી શકશે. જો બંધ હશે, તો તેમને નોટિસ દેખાશે કે હોલ ટિકિટ હજુ જાહેર કરવામાં આવી નથી.
+                </div>
+              </div>
+
+              <!-- Exam Title & Instructions -->
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Exam Official Title (પરીક્ષાનું નામ) *</label>
+                  <input type="text" class="form-control" id="ht_exam_title" required placeholder="e.g. Annual Board Examination 2026-27">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Exam Guidelines / Instructions for Candidate</label>
+                  <textarea class="form-control" id="ht_instructions" rows="3" placeholder="Enter instructions printed on admit card..."></textarea>
+                </div>
+              </div>
+
+              <!-- Schedule / Timetable Table -->
+              <div style="margin-top:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                  <h4 style="font-size:14px;color:var(--text);margin:0;font-weight:700">
+                    📅 Examination Timetable (<span id="htCurrentStandardLabel">Standard 1</span>)
+                  </h4>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="addHallTicketRow()" style="color:var(--primary);border-color:var(--primary);font-weight:700">
+                    ➕ Add Exam Subject Row
+                  </button>
+                </div>
+
+                <div class="table-wrap" style="border:1px solid var(--border);border-radius:8px;overflow-x:auto">
+                  <table class="table" style="margin-bottom:0;min-width:680px">
+                    <thead>
+                      <tr style="background:#EEF2FF">
+                        <th style="width:145px">Date (તારીખ)</th>
+                        <th style="width:125px">Day (વાર)</th>
+                        <th>Subject Name (વિષય)</th>
+                        <th style="width:190px">Timing (સમય)</th>
+                        <th style="width:145px">Room / Hall</th>
+                        <th style="width:60px;text-align:center">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="htScheduleTableBody">
+                      <!-- Rendered dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="form-actions" style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+                <button type="button" class="btn btn-outline" onclick="loadHallTicketStandardConfig()">🔄 Reset Standard</button>
+                <button type="submit" class="btn btn-primary">💾 Save Hall Ticket for this Standard</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. Management Password Security -->
       <div class="settings-panel" id="panel-security">
         <div class="card settings-card">
           <div class="card-header">
@@ -1471,8 +1587,183 @@ input:checked + .slider:before {
     }
   }
 
+  // ─── 11. Hall Ticket Configuration Management ──────────────────────────────
+  let currentHtStandard = 1;
+  let currentHtSchedule = [];
+
+  function updateHtStatusBadge() {
+    const isChecked = document.getElementById('ht_enabled').checked;
+    const badge = document.getElementById('ht_status_text');
+    if (isChecked) {
+      badge.textContent = '✅ Published (વિદ્યાર્થી ડાઉનલોડ કરી શકશે)';
+      badge.style.color = '#15803D';
+    } else {
+      badge.textContent = '🚫 Unpublished / Hidden (વિદ્યાર્થી ડાઉનલોડ નહીં કરી શકે)';
+      badge.style.color = '#DC2626';
+    }
+  }
+
+  function onHallTicketStandardChange() {
+    currentHtStandard = Number(document.getElementById('ht_select_standard').value || 1);
+    loadHallTicketStandardConfig();
+  }
+
+  async function loadHallTicketStandardConfig() {
+    const std = currentHtStandard;
+    const label = document.getElementById('htCurrentStandardLabel');
+    if (label) label.textContent = `Standard ${std}`;
+
+    const { ok, data } = await Api.getHallTicketConfig(std);
+    if (!ok || !data?.config) {
+      Toast.error(`Failed to load Standard ${std} hall ticket config.`);
+      return;
+    }
+
+    const cfg = data.config;
+    document.getElementById('ht_enabled').checked = cfg.enabled !== false;
+    updateHtStatusBadge();
+    document.getElementById('ht_exam_title').value = cfg.exam_title || `Standard ${std} Annual Examination 2026-27`;
+    document.getElementById('ht_instructions').value = cfg.instructions || '';
+
+    currentHtSchedule = Array.isArray(cfg.schedule) ? [...cfg.schedule] : [];
+    renderHtScheduleTable();
+  }
+
+  function renderHtScheduleTable() {
+    const tbody = document.getElementById('htScheduleTableBody');
+    if (!currentHtSchedule.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center;padding:24px;color:#64748B">
+            No exam timetable rows added for Standard ${currentHtStandard} yet.<br/>
+            Click <b>"➕ Add Exam Subject Row"</b> above to add timetable subjects.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = currentHtSchedule.map((row, idx) => `
+      <tr>
+        <td>
+          <input type="date" class="form-control form-control-sm" value="${row.date || ''}" onchange="onHtDateChange(${idx}, this.value)" style="font-size:12px;padding:4px 6px">
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" id="ht_day_${idx}" value="${row.day || ''}" placeholder="Day" style="font-size:12px;padding:4px 6px">
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" id="ht_sub_${idx}" value="${row.subject || row.sub || ''}" placeholder="Subject name" style="font-size:12.5px;font-weight:700;padding:4px 6px">
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" id="ht_time_${idx}" value="${row.time || '09:00 AM - 12:00 PM'}" placeholder="09:00 AM - 12:00 PM" style="font-size:12px;padding:4px 6px">
+        </td>
+        <td>
+          <input type="text" class="form-control form-control-sm" id="ht_room_${idx}" value="${row.room || ('Room 10' + (((currentHtStandard - 1) % 4) + 1))}" placeholder="Room 101" style="font-size:12px;padding:4px 6px">
+        </td>
+        <td style="text-align:center">
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeHtRow(${idx})" style="padding:3px 8px;font-size:11px" title="Delete row">✕</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function onHtDateChange(idx, dateVal) {
+    if (!dateVal) return;
+    try {
+      const d = new Date(dateVal + 'T00:00:00');
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const dayName = days[d.getDay()];
+      const dayInput = document.getElementById(`ht_day_${idx}`);
+      if (dayInput && dayName) {
+        dayInput.value = dayName;
+      }
+    } catch(e) {}
+  }
+
+  function addHallTicketRow() {
+    collectHtScheduleFromDOM();
+    const nextDate = new Date();
+    nextDate.setDate(nextDate.getDate() + 15 + currentHtSchedule.length * 2);
+    const dateStr = nextDate.toISOString().split('T')[0];
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayName = days[nextDate.getDay()];
+
+    currentHtSchedule.push({
+      date: dateStr,
+      day: dayName,
+      subject: '',
+      time: '09:00 AM - 12:00 PM',
+      room: `Room 10${((currentHtStandard - 1) % 4) + 1}`
+    });
+    renderHtScheduleTable();
+  }
+
+  function removeHtRow(idx) {
+    collectHtScheduleFromDOM();
+    currentHtSchedule.splice(idx, 1);
+    renderHtScheduleTable();
+  }
+
+  function collectHtScheduleFromDOM() {
+    const updated = [];
+    currentHtSchedule.forEach((_, idx) => {
+      const dateInp = document.querySelector(`#htScheduleTableBody tr:nth-child(${idx + 1}) input[type="date"]`);
+      const dayInp = document.getElementById(`ht_day_${idx}`);
+      const subInp = document.getElementById(`ht_sub_${idx}`);
+      const timeInp = document.getElementById(`ht_time_${idx}`);
+      const roomInp = document.getElementById(`ht_room_${idx}`);
+
+      if (subInp) {
+        updated.push({
+          date: dateInp ? dateInp.value : '',
+          day: dayInp ? dayInp.value.trim() : '',
+          subject: subInp.value.trim(),
+          time: timeInp ? timeInp.value.trim() : '09:00 AM - 12:00 PM',
+          room: roomInp ? roomInp.value.trim() : 'Room 101'
+        });
+      }
+    });
+    currentHtSchedule = updated;
+    return updated;
+  }
+
+  async function saveHallTicketConfig() {
+    const schedule = collectHtScheduleFromDOM();
+    const payload = {
+      enabled: document.getElementById('ht_enabled').checked,
+      exam_title: document.getElementById('ht_exam_title').value.trim(),
+      instructions: document.getElementById('ht_instructions').value.trim(),
+      schedule: schedule
+    };
+
+    const { ok, data } = await Api.updateHallTicketConfig(currentHtStandard, payload);
+    if (ok) {
+      Toast.success(data.message || `Hall Ticket config for Standard ${currentHtStandard} saved successfully!`);
+    } else {
+      if (data?.error && data.error.includes('Management authorization')) {
+        lockSettingsSession();
+      }
+      Toast.error(data?.error || 'Failed to save hall ticket settings.');
+    }
+  }
+
+  async function copyCurrentHtScheduleToAll() {
+    collectHtScheduleFromDOM();
+    if (!confirm(`Are you sure you want to copy the Standard ${currentHtStandard} exam schedule to ALL Standards (1 to 12)?`)) {
+      return;
+    }
+    await saveHallTicketConfig();
+    const { ok, data } = await Api.copyHallTicketConfig(currentHtStandard);
+    if (ok) {
+      Toast.success(data.message || 'Timetable copied to all standards successfully!');
+    } else {
+      Toast.error(data?.error || 'Failed to copy timetable.');
+    }
+  }
+
   // Initial load
   loadSettings();
+  loadHallTicketStandardConfig();
 </script>
 </body>
 </html>

@@ -233,23 +233,75 @@ function openMyIdCard() {
   }
 }
 
-function openMyHallTicket() {
-  if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
-    IdCardHelper.showHallTicket(window.myStudentProfile);
-  } else if (typeof Api !== 'undefined') {
-    Api.myProfile().then(({ ok, data }) => {
-      if (ok && data.student) {
-        window.myStudentProfile = data.student;
-        if (typeof IdCardHelper !== 'undefined') IdCardHelper.showHallTicket(data.student);
-      } else {
-        Toast.error('Profile details not loaded.');
-      }
-    });
+async function openMyHallTicket() {
+  if (typeof Toast !== 'undefined') Toast.info('Checking Hall Ticket status…');
+  let student = window.myStudentProfile;
+  if (!student && typeof Api !== 'undefined') {
+    const { ok, data } = await Api.myProfile();
+    if (ok && data.student) {
+      student = data.student;
+      window.myStudentProfile = data.student;
+    }
+  }
+
+  if (!student) {
+    if (typeof Toast !== 'undefined') Toast.error('Student details could not be loaded.');
+    return;
+  }
+
+  const std = student.standard || 1;
+  // 1. Fetch standard-wise hall ticket configuration from School Settings
+  try {
+    const { ok, data } = await Api.getHallTicketConfig(std);
+    if (!ok || !data?.config) {
+      if (typeof Toast !== 'undefined') Toast.error('Failed to verify hall ticket schedule.');
+      return;
+    }
+
+    const cfg = data.config;
+    // 2. Check if hall ticket is enabled / published for this standard in School Settings
+    if (cfg.enabled === false) {
+      showHallTicketUnpublishedModal(std);
+      return;
+    }
+
+    // 3. Allowed! Open official hall ticket with standard-wise schedule and guidelines
+    if (typeof IdCardHelper !== 'undefined') {
+      IdCardHelper.showHallTicket(student, cfg);
+    }
+  } catch (err) {
+    console.error('Hall ticket load error:', err);
+    if (typeof Toast !== 'undefined') Toast.error('Error loading hall ticket.');
+  }
+}
+
+function showHallTicketUnpublishedModal(std) {
+  const modalId = 'htUnpublishedModal_' + Date.now();
+  const html = `
+    <div id="${modalId}" class="id-card-modal-backdrop" onclick="if(event.target===this) document.getElementById('${modalId}').remove()">
+      <div class="id-card-modal-container" style="max-width:480px;text-align:center;padding:28px 24px;background:#fff;border-radius:14px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.2)">
+        <div style="font-size:52px;margin-bottom:12px">⚠️</div>
+        <h3 style="font-size:18px;font-weight:800;color:#1E293B;margin:0 0 8px">હોલ ટિકિટ હજુ જાહેર કરેલ નથી</h3>
+        <div style="font-size:14px;color:#DC2626;font-weight:700;margin-bottom:12px">Hall Ticket Not Published for Standard ${std}</div>
+        <p style="font-size:13px;color:#475569;line-height:1.6;margin:0 0 20px">
+          તમારા ધોરણ <b>(Standard ${std})</b> માટે હોલ ટિકિટ હજુ સ્કૂલ એડમિનિસ્ટ્રેશન દ્વારા બહાર પાડવામાં આવી નથી.<br/>
+          સ્કૂલ સેટિંગ્સમાંથી મંજૂરી અને પરીક્ષા ટાઈમટેબલ જાહેર થયા પછી જ તમે અહીંથી હોલ ટિકિટ ડાઉનલોડ કરી શકશો.
+        </p>
+        <button class="btn btn-primary" onclick="document.getElementById('${modalId}').remove()" style="min-width:140px;padding:8px 20px;font-weight:700">
+          સમજાઈ ગયું (Close)
+        </button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', html);
+  if (typeof IdCardHelper !== 'undefined' && IdCardHelper.injectStyles) {
+    IdCardHelper.injectStyles();
   }
 }
 
 window.openMyIdCard = openMyIdCard;
 window.openMyHallTicket = openMyHallTicket;
+window.showHallTicketUnpublishedModal = showHallTicketUnpublishedModal;
 
 // ─── Attendance Page Initialization ──────────────────────────────────────────
 
