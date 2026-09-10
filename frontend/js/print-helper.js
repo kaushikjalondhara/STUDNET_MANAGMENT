@@ -8,6 +8,90 @@ const PrintHelper = {
    * Helper to print HTML content in an isolated hidden iframe
    */
   printHtml(contentHtml, documentTitle = 'School Document') {
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+    if (isMobile) {
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.open();
+        win.document.write(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${documentTitle}</title>
+            <style>
+              @page { size: A4 portrait; margin: 10mm; }
+              * { box-sizing: border-box; margin: 0; padding: 0; }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                color: #0f172a; background: #f8fafc; padding: 12px; font-size: 12.5px;
+              }
+              .receipt-frame {
+                background: #fff; border: 2px solid #1e293b; border-radius: 8px;
+                padding: 16px; margin: 0 auto; max-width: 650px; position: relative;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+              }
+              .receipt-watermark-paid {
+                position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-25deg);
+                font-size: 54px; font-weight: 900; color: rgba(16, 185, 129, 0.12); pointer-events: none;
+              }
+              .official-letterhead { text-align: center; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; }
+              .school-emblem { font-size: 28px; margin-bottom: 2px; }
+              .school-name { font-size: 18px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
+              .school-tagline { font-size: 11px; color: #475569; }
+              .school-meta-line { font-size: 10px; color: #64748b; }
+              .doc-badge-title {
+                display: inline-block; background: #0f172a; color: #fff; font-size: 12px;
+                font-weight: 800; padding: 3px 14px; border-radius: 4px; margin-top: 6px;
+              }
+              .report-meta-grid {
+                display: flex; flex-direction: column; gap: 6px; background: #f8fafc;
+                border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; font-size: 11.5px;
+              }
+              .report-meta-grid div { line-height: 1.5; }
+              table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px; }
+              th { background: #0f172a; color: #fff; padding: 6px 8px; text-align: left; }
+              td { border: 1px solid #cbd5e1; padding: 6px 8px; }
+              .doc-footer-signatures { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 18px; }
+              .sig-column { width: 100%; text-align: center; font-size: 10.5px; }
+              .sig-line { border-top: 1.5px solid #475569; padding-top: 4px; }
+              .official-stamp-box {
+                border: 2px dashed #059669; color: #059669; border-radius: 6px; padding: 6px 12px; text-align: center;
+              }
+              .mobile-action-bar {
+                display: flex; justify-content: space-between; align-items: center;
+                background: #0f172a; color: #fff; padding: 10px 14px; border-radius: 8px;
+                margin-bottom: 12px; position: sticky; top: 0; z-index: 100;
+              }
+              .mobile-action-btn {
+                background: #10b981; color: #fff; border: none; padding: 8px 14px;
+                border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;
+              }
+              @media print {
+                .mobile-action-bar { display: none !important; }
+                body { padding: 0 !important; background: #fff !important; }
+                .receipt-frame { box-shadow: none !important; border: 2px solid #000 !important; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="mobile-action-bar">
+              <span style="font-weight:700">📄 Fee Receipt</span>
+              <button class="mobile-action-btn" onclick="window.print()">📥 Download / Print PDF</button>
+            </div>
+            ${contentHtml}
+            <script>
+              setTimeout(() => { window.print(); }, 400);
+            <\/script>
+          </body>
+          </html>
+        `);
+        win.document.close();
+        return;
+      }
+    }
+
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
     iframe.style.right = '0';
@@ -230,7 +314,7 @@ const PrintHelper = {
     const utr = t.utr_number || '—';
     const date = t.date || new Date().toLocaleString();
     const mode = t.payment_mode || 'Online UPI';
-    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'gyan jyot vidhaya bhavan';
+    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : (localStorage.getItem('sms_school_name') || 'Parth classic');
 
     const html = `
       <div class="receipt-frame">
@@ -317,7 +401,7 @@ const PrintHelper = {
   printReport({ title, subtitle, standard, tableHeaders, tableRowsHtml, summaryStatsHtml = '' }) {
     const stdText = standard ? (standard.toString().includes('Standard') ? standard : `Standard ${standard}`) : 'All Classes';
     const now = new Date().toLocaleString();
-    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'gyan jyot vidhaya bhavan';
+    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : (localStorage.getItem('sms_school_name') || 'Parth classic');
 
     const html = `
       <div>

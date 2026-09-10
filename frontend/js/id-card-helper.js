@@ -376,7 +376,7 @@ const IdCardHelper = {
                       <tr><td class="lbl">Roll No</td><td>: <b>${student.roll_no}</b></td></tr>
                       <tr><td class="lbl">Standard</td><td>: Class ${std}</td></tr>
                       <tr><td class="lbl">Mobile</td><td>: ${student.mobile || '—'}</td></tr>
-                      <tr><td class="lbl">Emergency</td><td>: ${school.phone}</td></tr>
+                      <tr><td class="lbl">School No.</td><td>: ${school.phone}</td></tr>
                     </table>
                   </div>
 
@@ -469,11 +469,11 @@ const IdCardHelper = {
               </div>
 
               <!-- CANDIDATE INFO WITH PHOTO -->
-              <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px">
+              <div class="ticket-candidate-wrapper">
                 <div class="id-card-img-wrapper" style="width:78px;height:92px;flex-shrink:0">
                   <img src="${photoUrl}" alt="${student.name}" class="id-student-photo-img" />
                 </div>
-                <div class="ticket-candidate-grid" style="flex:1;margin-bottom:0">
+                <div class="ticket-candidate-grid">
                   <div class="ticket-info-group">
                     <span class="t-label">Candidate Name:</span>
                     <span class="t-val"><b>${student.name}</b></span>
@@ -495,28 +495,30 @@ const IdCardHelper = {
 
               <!-- SCHEDULE TABLE -->
               <div class="ticket-table-title">📅 Official Examination Timetable</div>
-              <table class="ticket-exam-table">
-                <thead>
-                  <tr>
-                    <th>Date & Day</th>
-                    <th>Subject Name</th>
-                    <th>Timing</th>
-                    <th>Room</th>
-                    <th>Invigilator Sign</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${subjects.map(s => `
+              <div class="ticket-exam-table-wrap">
+                <table class="ticket-exam-table">
+                  <thead>
                     <tr>
-                      <td style="font-weight:600">${s.date} <small>(${s.day})</small></td>
-                      <td><b>${s.sub}</b></td>
-                      <td>${s.time}</td>
-                      <td>${s.room}</td>
-                      <td class="sign-cell"></td>
+                      <th>Date & Day</th>
+                      <th>Subject Name</th>
+                      <th>Timing</th>
+                      <th>Room</th>
+                      <th>Invigilator Sign</th>
                     </tr>
-                  `).join('')}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    ${subjects.map(s => `
+                      <tr>
+                        <td style="font-weight:600">${s.date} <small>(${s.day})</small></td>
+                        <td><b>${s.sub}</b></td>
+                        <td>${s.time}</td>
+                        <td>${s.room}</td>
+                        <td class="sign-cell"></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
 
               <!-- RULES -->
               <div class="ticket-rules">
@@ -783,8 +785,15 @@ const IdCardHelper = {
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       .id-info-table { font-size: 11.5px; border-collapse: collapse; width: 100%; }
-      .id-info-table td { padding: 2px 0; color: #334155; }
-      .id-info-table td.lbl { font-weight: 600; color: #64748B; width: 62px; }
+      .id-info-table td { padding: 2px 0; color: #334155; white-space: nowrap; }
+      .id-info-table td.lbl { font-weight: 600; color: #64748B; width: 72px; padding-right: 4px; }
+
+      .ticket-candidate-wrapper {
+        display: flex; gap: 16px; align-items: center; margin-bottom: 16px; width: 100%;
+      }
+      .ticket-exam-table-wrap {
+        width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      }
 
       .id-card-qr-box {
         display: flex; flex-direction: column; align-items: center; flex-shrink: 0;
@@ -927,8 +936,11 @@ const IdCardHelper = {
         .id-info-table {
           font-size: 10.5px !important;
         }
+        .id-info-table td {
+          white-space: nowrap !important;
+        }
         .id-info-table td.lbl {
-          width: 52px !important;
+          width: 68px !important;
         }
         .id-card-footer {
           padding: 6px 8px 8px 8px !important;
@@ -946,8 +958,15 @@ const IdCardHelper = {
         }
 
         /* Hall Ticket Mobile */
+        .ticket-container {
+          max-width: 96% !important;
+          width: 100% !important;
+          max-height: 94vh !important;
+        }
         .official-hall-ticket {
           padding: 14px 10px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
         }
         .ticket-header {
           flex-direction: column !important;
@@ -957,23 +976,57 @@ const IdCardHelper = {
         .ticket-school-name {
           font-size: 15px !important;
         }
+        .ticket-candidate-wrapper {
+          flex-direction: column !important;
+          align-items: center !important;
+          gap: 10px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .ticket-candidate-wrapper .id-card-img-wrapper {
+          margin: 0 auto !important;
+        }
         .ticket-candidate-grid {
           grid-template-columns: 1fr !important;
           gap: 6px !important;
           padding: 8px 10px !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .ticket-info-group {
+          display: flex !important;
+          flex-direction: row !important;
+          align-items: baseline !important;
+          gap: 6px !important;
+          font-size: 11.5px !important;
+          width: 100% !important;
         }
         .t-label {
-          min-width: 100px !important;
+          min-width: 115px !important;
+          max-width: 115px !important;
+          flex-shrink: 0 !important;
           font-size: 11px !important;
         }
-        .ticket-exam-table {
-          font-size: 10px !important;
-          display: block !important;
+        .t-val {
+          font-size: 11.5px !important;
+          word-break: break-word !important;
+        }
+        .ticket-exam-table-wrap {
+          width: 100% !important;
           overflow-x: auto !important;
           -webkit-overflow-scrolling: touch !important;
+          border: 1px solid #CBD5E1 !important;
+          border-radius: 6px !important;
+          margin-bottom: 12px !important;
+        }
+        .ticket-exam-table {
+          font-size: 10.5px !important;
+          min-width: 480px !important;
+          width: 100% !important;
+          display: table !important;
         }
         .ticket-exam-table th, .ticket-exam-table td {
-          padding: 4px 6px !important;
+          padding: 5px 8px !important;
           white-space: nowrap !important;
         }
         .ticket-signatures {

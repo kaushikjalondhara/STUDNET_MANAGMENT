@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Fees & Payments — EduManage Pro</title>
-<link rel="stylesheet" href="../css/style.css?v=11">
-<link rel="stylesheet" href="../css/dashboard.css?v=11">
+<link rel="stylesheet" href="../css/style.css?v=12">
+<link rel="stylesheet" href="../css/dashboard.css?v=12">
 <style>
   .payment-modal-box {
     max-width: 395px !important;
@@ -80,7 +80,23 @@
   }
   @media (max-width: 600px) {
     .receipt-card {
-      padding: 16px 12px;
+      padding: 16px 12px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .receipt-meta-wrap {
+      flex-direction: column !important;
+      gap: 10px !important;
+      font-size: 12px !important;
+    }
+    .receipt-meta-wrap > div {
+      text-align: left !important;
+    }
+    .tt-table {
+      font-size: 11.5px !important;
+    }
+    .tt-table th, .tt-table td {
+      padding: 6px 8px !important;
     }
     .payment-modal-box {
       width: 95% !important;
@@ -360,11 +376,11 @@
       <div class="receipt-watermark">PAID</div>
       <div class="receipt-header">
         <div style="font-size:26px;margin-bottom:4px">🏫</div>
-        <div class="receipt-title">EduManage Pro Public School</div>
+        <div class="receipt-title" id="rSchoolTitle">EduManage Pro Public School</div>
         <div style="font-size:12px;color:#64748B">Official Student Fee Payment Receipt</div>
       </div>
 
-      <div style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px">
+      <div class="receipt-meta-wrap" style="display:flex;justify-content:space-between;margin-bottom:16px;font-size:13px">
         <div>
           <div><b>Receipt No:</b> <span id="rReceiptNo">—</span></div>
           <div><b>Txn ID:</b> <span id="rTxnId">—</span></div>
@@ -410,7 +426,7 @@
     <div class="modal-actions" style="margin-top:16px">
       <button type="button" class="btn btn-outline" onclick="closeReceiptModal()">Close</button>
       <button type="button" class="btn btn-primary" onclick="printReceiptIsolated()" style="background:#0F172A">
-        🖨️ Print Receipt (Official Slip Only)
+        📥 Download / Print Receipt (Official PDF)
       </button>
     </div>
   </div>
@@ -418,9 +434,9 @@
 
 <div id="toast-container"></div>
 <!-- External Scripts -->
-<script src="../js/api.js?v=11"></script>
-<script src="../js/auth.js?v=11"></script>
-<script src="../js/print-helper.js?v=10"></script>
+<script src="../js/api.js?v=12"></script>
+<script src="../js/auth.js?v=12"></script>
+<script src="../js/print-helper.js?v=12"></script>
 <script>
   let currentFeeData = null;
   let activePayMode = 'UPI';
@@ -842,6 +858,10 @@
   function viewReceiptDetail(t) {
     activeTransaction = t;
     const user = Auth.getUser() || {};
+    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : (localStorage.getItem('sms_school_name') || 'Parth classic');
+    const titleEl = document.getElementById('rSchoolTitle');
+    if (titleEl) titleEl.textContent = schoolName;
+
     document.getElementById('rReceiptNo').textContent = t.receipt_no || '—';
     document.getElementById('rTxnId').textContent = t.transaction_id || '—';
     document.getElementById('rUtrNo').textContent = t.utr_number || t.razorpay_payment_id || 'VERIFIED';
