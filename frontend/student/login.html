@@ -72,10 +72,9 @@
   // Pre-warm server connection as soon as login page opens
   fetch('/api/health').catch(() => {});
 
-  // Already logged in?
-  if (Auth.isLoggedIn() && Auth.isStudent()) {
-    window.location.href = '/student/dashboard.html';
-  }
+  // Remove any stale session so login form is always shown and required
+  localStorage.removeItem('sms_token');
+  localStorage.removeItem('sms_user');
 
   const MOBILE_RE = /^[6-9]\d{9}$/;
 

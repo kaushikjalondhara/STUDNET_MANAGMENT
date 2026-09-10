@@ -52,12 +52,10 @@
   // Pre-warm server connection as soon as login page opens
   fetch('/api/health').catch(() => {});
 
-  // Already logged in?
-  if (Auth.isLoggedIn() && Auth.isTeacher()) {
-    window.location.href = Standard.getActive()
-      ? '/teacher/dashboard.html'
-      : '/teacher/select-standard.html';
-  }
+  // Remove any stale session so login form is always shown and required
+  localStorage.removeItem('sms_token');
+  localStorage.removeItem('sms_user');
+  localStorage.removeItem('sms_active_standard');
 
   function togglePassword() {
     const inp = document.getElementById('password');
