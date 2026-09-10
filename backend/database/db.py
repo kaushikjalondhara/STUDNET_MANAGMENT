@@ -12,9 +12,9 @@ def get_db():
     if _db is None:
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27017/')
         kwargs = {
-            'serverSelectionTimeoutMS': 5000,
-            'connectTimeoutMS': 5000,
-            'socketTimeoutMS': 15000,
+            'serverSelectionTimeoutMS': 20000,
+            'connectTimeoutMS': 20000,
+            'socketTimeoutMS': 30000,
             'maxPoolSize': 50,
             'minPoolSize': 5,
             'maxIdleTimeMS': 45000,
