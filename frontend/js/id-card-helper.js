@@ -314,9 +314,13 @@ const IdCardHelper = {
               <span style="font-size:20px">🪪</span>
               <h3 style="margin:0;font-size:16px;color:#1E293B">Official Student Identity Card</h3>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-primary btn-sm" onclick="IdCardHelper.printElement('printArea_${modalId}')">🖨️ Print ID Card</button>
-              <button class="btn btn-outline btn-sm" onclick="IdCardHelper.closeModal('${modalId}')">✕</button>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label class="btn btn-outline btn-sm no-print" style="cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:600;color:#1E3A8A;border-color:#BFDBFE;background:#EFF6FF" title="Upload or change student photo">
+                📷 Upload Photo
+                <input type="file" id="headerPhotoInput_${sid}" accept="image/*" style="display:none" onchange="IdCardHelper.handlePhotoUpload(this, '${sid}')">
+              </label>
+              <button class="btn btn-primary btn-sm no-print" onclick="IdCardHelper.printElement('printArea_${modalId}')">🖨️ Print ID Card</button>
+              <button class="btn btn-outline btn-sm no-print" onclick="IdCardHelper.closeModal('${modalId}')">✕</button>
             </div>
           </div>
 
@@ -336,13 +340,9 @@ const IdCardHelper = {
                 <div class="id-card-body-content">
                   <!-- Student Photo Image -->
                   <div class="id-card-photo-box">
-                    <div class="id-card-img-wrapper" id="idCardPhotoWrap_${sid}">
+                    <div class="id-card-img-wrapper" id="idCardPhotoWrap_${sid}" onclick="document.getElementById('headerPhotoInput_${sid}').click()" style="cursor:pointer" title="Click to upload/change photo">
                       <img src="${photoUrl}" alt="${student.name}" class="id-student-photo-img" id="idCardImg_${sid}" />
                     </div>
-                    <label class="id-upload-photo-btn" title="Click to upload student photo from computer">
-                      📷 Upload Photo
-                      <input type="file" accept="image/*" style="display:none" onchange="IdCardHelper.handlePhotoUpload(this, '${sid}')">
-                    </label>
                     <div class="id-card-std-tag">STD ${std}</div>
                   </div>
 
@@ -652,6 +652,16 @@ const IdCardHelper = {
           @page { size: auto; margin: 10mm; }
           body { background: #fff; margin: 0; padding: 10px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
           .bulk-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; page-break-inside: avoid; }
+          .no-print, .id-upload-photo-btn, input[type="file"], label.id-upload-photo-btn, button, .btn {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          @media print {
+            .no-print, .id-upload-photo-btn, input[type="file"], label.id-upload-photo-btn, button, .btn {
+              display: none !important;
+              visibility: hidden !important;
+            }
+          }
         </style>
       </head>
       <body>
@@ -726,11 +736,17 @@ const IdCardHelper = {
         width: 100%; height: 100%; object-fit: cover; display: block;
       }
       .id-upload-photo-btn {
-        font-size: 8.5px; font-weight: 700; color: #1E3A8A; background: #EFF6FF;
-        border: 1px solid #BFDBFE; padding: 1px 6px; border-radius: 4px; cursor: pointer;
-        margin-top: 2px; margin-bottom: 2px; text-align: center;
+        display: none !important;
       }
-      .id-upload-photo-btn:hover { background: #DBEAFE; }
+      .no-print {
+        /* Screen display for toolbar */
+      }
+      @media print {
+        .no-print, .id-upload-photo-btn, input[type="file"], label.id-upload-photo-btn, button, .btn {
+          display: none !important;
+          visibility: hidden !important;
+        }
+      }
 
       .id-card-std-tag {
         background: #1E3A8A; color: #fff; font-size: 10px; font-weight: 700;
