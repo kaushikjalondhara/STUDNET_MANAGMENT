@@ -150,11 +150,11 @@ def change_management_password(old_password: str, new_password: str) -> tuple[bo
 
 DEFAULT_SCHOOL_SETTINGS = {
     'school_info': {
-        'name': 'EduManage Pro Public School',
+        'name': 'Parth classic',
         'logo': '/css/school-logo.png',
         'address': '123 Education Boulevard, Knowledge City, Gujarat 380001',
         'mobile': '+91 98765 43210',
-        'email': 'info@edumanageschool.edu',
+        'email': 'info@parthclassic.edu.in',
         'website': 'https://edumanagepro.edu',
         'academic_year': '2026-2027'
     },

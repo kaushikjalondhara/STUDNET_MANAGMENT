@@ -40,6 +40,7 @@ def get_attendance():
             'roll_no':    s['roll_no'],
             'mobile':     s.get('mobile', ''),
             'email':      s.get('email', ''),
+            'photo':      s.get('photo') or s.get('photo_url') or '',
             'status':     record_map.get(s['_id'], 'not_marked')
         })
 

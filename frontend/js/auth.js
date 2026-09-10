@@ -1,5 +1,5 @@
 /**
- * auth.js — Authentication guard utilities
+ * auth.js?v=5 — Authentication guard utilities
  * localStorage keys: sms_token, sms_user
  */
 
@@ -396,7 +396,7 @@ const SchoolBranding = {
 
   getName() {
     const stored = this.getStored();
-    return (stored && (stored.name || stored.school_name)) || 'gyan jyot vidhaya bhavan';
+    return (stored && (stored.name || stored.school_name)) || 'Parth classic';
   },
 
   apply(info) {

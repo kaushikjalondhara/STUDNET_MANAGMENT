@@ -1,5 +1,5 @@
 /**
- * attendance.js — Full date-wise attendance management
+ * attendance.js?v=5 — Full date-wise attendance management
  */
 
 let attendanceData   = [];      // Current date's attendance list
@@ -110,14 +110,18 @@ function renderAttendance(records) {
   tbody.innerHTML = records.map(r => {
     const isPres = r.status === 'present';
     const isAbs  = r.status === 'absent';
+    const photoUrl = (r.photo && typeof r.photo === 'string' && r.photo.trim().length > 10)
+      ? r.photo
+      : `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(r.name || 'Student')}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+
     return `
     <tr data-id="${r.student_id}">
       <td style="font-weight:600">${r.roll_no}</td>
       <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div class="student-avatar-sm">${r.name[0].toUpperCase()}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <img src="${photoUrl}" class="student-avatar-sm" style="object-fit:cover;border:1.5px solid #CBD5E1;border-radius:50%;width:34px;height:34px;background:#F1F5F9" alt="${r.name}" onerror="this.outerHTML='<div class=\\'student-avatar-sm\\'>${(r.name[0]||'S').toUpperCase()}</div>'" />
           <div>
-            <div>${r.name}</div>
+            <div style="font-weight:600;color:#1E293B">${r.name}</div>
             ${r.mobile ? `<small style="color:#64748B;font-size:10.5px">📱 ${r.mobile}</small>` : ''}
           </div>
         </div>
