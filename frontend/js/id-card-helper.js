@@ -726,9 +726,10 @@ const IdCardHelper = {
       }
 
       /* ── Single ID Card (Standard CR80 / 85x54mm visual ratio) ── */
-      .id-card-wrap { display: flex; justify-content: center; }
+      .id-card-wrap { display: flex; justify-content: center; width: 100%; }
       .official-id-card {
-        width: 440px; background: #fff; border-radius: 12px;
+        width: 100%; max-width: 440px; box-sizing: border-box;
+        background: #fff; border-radius: 12px;
         border: 2px solid #1E3A8A; box-shadow: 0 8px 24px rgba(30, 58, 138, 0.15);
         overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         position: relative; page-break-inside: avoid;
@@ -865,6 +866,131 @@ const IdCardHelper = {
       /* ── Bulk ID Cards Grid ── */
       .bulk-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
       .bulk-card { width: 100% !important; }
+
+      /* ── Mobile Responsive Rules for ID Cards & Hall Tickets ── */
+      @media (max-width: 600px) {
+        .id-card-modal-backdrop {
+          padding: 8px !important;
+        }
+        .id-card-modal-container {
+          max-width: 100% !important;
+          border-radius: 12px !important;
+          max-height: 96vh !important;
+        }
+        .id-card-modal-header {
+          padding: 10px 12px !important;
+          flex-wrap: wrap !important;
+          gap: 8px !important;
+        }
+        .id-card-modal-header h3 {
+          font-size: 14px !important;
+        }
+        .id-card-modal-body {
+          padding: 12px 8px !important;
+        }
+        .official-id-card {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .id-card-topbar {
+          padding: 10px 10px !important;
+          gap: 8px !important;
+        }
+        .id-card-logo {
+          font-size: 22px !important;
+        }
+        .id-card-school-name {
+          font-size: 12px !important;
+        }
+        .id-card-school-tagline {
+          font-size: 9px !important;
+        }
+        .id-card-body-content {
+          padding: 10px 8px !important;
+          gap: 8px !important;
+        }
+        .id-card-img-wrapper {
+          width: 64px !important;
+          height: 76px !important;
+        }
+        .id-card-qr-box {
+          padding: 3px !important;
+        }
+        .id-qr-img {
+          width: 48px !important;
+          height: 48px !important;
+        }
+        .id-name {
+          font-size: 13px !important;
+          margin-bottom: 3px !important;
+        }
+        .id-info-table {
+          font-size: 10.5px !important;
+        }
+        .id-info-table td.lbl {
+          width: 52px !important;
+        }
+        .id-card-footer {
+          padding: 6px 8px 8px 8px !important;
+        }
+        .sign-line {
+          font-size: 11px !important;
+        }
+        .sign-title {
+          font-size: 7.5px !important;
+        }
+        .seal-circle {
+          width: 40px !important;
+          height: 40px !important;
+          font-size: 7.5px !important;
+        }
+
+        /* Hall Ticket Mobile */
+        .official-hall-ticket {
+          padding: 14px 10px !important;
+        }
+        .ticket-header {
+          flex-direction: column !important;
+          text-align: center !important;
+          gap: 8px !important;
+        }
+        .ticket-school-name {
+          font-size: 15px !important;
+        }
+        .ticket-candidate-grid {
+          grid-template-columns: 1fr !important;
+          gap: 6px !important;
+          padding: 8px 10px !important;
+        }
+        .t-label {
+          min-width: 100px !important;
+          font-size: 11px !important;
+        }
+        .ticket-exam-table {
+          font-size: 10px !important;
+          display: block !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+        }
+        .ticket-exam-table th, .ticket-exam-table td {
+          padding: 4px 6px !important;
+          white-space: nowrap !important;
+        }
+        .ticket-signatures {
+          flex-direction: column !important;
+          align-items: center !important;
+          gap: 14px !important;
+        }
+        .t-sign-box {
+          width: 100% !important;
+        }
+
+        /* Bulk ID Cards Mobile Grid */
+        .bulk-grid {
+          grid-template-columns: 1fr !important;
+          gap: 12px !important;
+        }
+      }
     `;
   },
 

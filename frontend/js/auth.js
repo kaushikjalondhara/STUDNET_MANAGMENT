@@ -253,6 +253,26 @@ const Toast = {
 };
 
 // ─── Universal Mobile Navigation ──────────────────────────────────────────────
+window.toggleSidebar = function() {
+  const sidebar = document.querySelector('.sidebar');
+  let backdrop = document.querySelector('.sidebar-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener('click', window.closeSidebar);
+  }
+  if (sidebar) sidebar.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('open');
+};
+
+window.closeSidebar = function() {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.querySelector('.sidebar-backdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('open');
+};
+
 function initMobileNavigation() {
   const sidebar = document.querySelector('.sidebar');
   const topHeader = document.querySelector('.top-header');

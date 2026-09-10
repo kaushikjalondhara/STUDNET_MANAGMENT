@@ -933,6 +933,18 @@ tbody tr:hover { background: #F8FAFC; }
     grid-template-columns: 1fr;
     gap: 14px;
   }
+  .att-toggle {
+    gap: 8px;
+  }
+  .att-btn {
+    min-height: 38px;
+    min-width: 76px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
 
   .notice-card {
     padding: 14px 12px;
