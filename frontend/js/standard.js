@@ -52,6 +52,13 @@ const Standard = {
   updateStickyPosition() {
     const header = document.querySelector('.top-header');
     if (header) {
+      if (window.innerWidth <= 768) {
+        document.querySelectorAll('.std-banner').forEach(b => {
+          b.style.top = '';
+          b.style.position = '';
+        });
+        return;
+      }
       const h = header.offsetHeight;
       document.querySelectorAll('.std-banner').forEach(b => {
         b.style.top = `${h}px`;

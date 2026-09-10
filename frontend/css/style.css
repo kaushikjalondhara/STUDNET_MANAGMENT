@@ -831,17 +831,31 @@ tbody tr:hover { background: #F8FAFC; }
     width: 100%;
   }
   .header-right {
-    width: 100%;
-    justify-content: flex-start;
-    padding-bottom: 4px;
-    gap: 8px;
+    width: 100% !important;
+    justify-content: flex-start !important;
+    padding-bottom: 4px !important;
+    gap: 8px !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+  }
+  .header-right .btn {
+    flex: 1 1 calc(50% - 6px) !important;
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    justify-content: center !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
   }
 
   .std-banner {
+    position: static !important;
+    top: auto !important;
     padding: 12px 14px;
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    box-shadow: none !important;
+    margin-bottom: 8px !important;
   }
   .std-banner-left {
     width: 100%;
@@ -856,8 +870,21 @@ tbody tr:hover { background: #F8FAFC; }
     font-size: 13px;
   }
 
+  .main-content,
   .page-content {
-    padding: 14px 10px;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .card {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .page-content {
+    padding: 12px 8px;
   }
 
   .form-grid {
@@ -987,6 +1014,9 @@ tbody tr:hover { background: #F8FAFC; }
 
   .top-header {
     padding: 8px 10px;
+  }
+  .header-right .btn {
+    flex: 1 1 100% !important;
   }
   .top-header h1 {
     font-size: 16px;

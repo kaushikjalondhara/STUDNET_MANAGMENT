@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Attendance — EduManage Pro</title>
-<link rel="stylesheet" href="../css/style.css">
-<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/style.css?v=11">
+<link rel="stylesheet" href="../css/dashboard.css?v=11">
 <style>
 /* ─── Two-column layout ───────────────────────────── */
 .att-layout {
@@ -131,6 +131,13 @@
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.attendance-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -401,42 +408,152 @@
 }
 
 
-@media (max-width: 600px) {
+@media (max-width: 900px) {
+  .top-header .header-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .top-header .header-right .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 8px 6px !important;
+    font-size: 11.5px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+  .std-banner {
+    position: static !important;
+    top: auto !important;
+    margin-bottom: 8px !important;
+    box-shadow: none !important;
+  }
+  .att-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    gap: 12px !important;
+  }
+  #attSection {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
   .date-selector-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .date-selector-card > div,
   .date-selector-card input[type="date"],
   .date-selector-card button {
-    width: 100%;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .att-summary-strip {
-    flex-wrap: wrap;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    background: #F8FAFC !important;
+    border-radius: 10px !important;
+    border: 1.5px solid #E2E8F0 !important;
+    overflow: visible !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   .att-strip-item {
-    flex: 1 1 45%;
+    padding: 8px 10px !important;
+    border-right: none !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+  }
+  .att-strip-item.pct {
+    grid-column: span 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 8px 14px !important;
+  }
+  .att-strip-item.pct .strip-label {
+    margin-bottom: 0 !important;
+    font-size: 11px !important;
+  }
+  .att-strip-item.pct .strip-val {
+    font-size: 18px !important;
   }
   .att-actions {
-    flex-direction: column;
+    flex-direction: column !important;
   }
   .att-actions .btn {
-    width: 100%;
-    justify-content: center;
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .attendance-sheet-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+  .attendance-sheet-card .card-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px 14px !important;
+    gap: 10px !important;
   }
   .attendance-controls {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    gap: 8px;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+    box-sizing: border-box !important;
   }
   .attendance-controls input {
+    grid-column: span 2 !important;
     width: 100% !important;
+    height: 40px !important;
+    font-size: 13.5px !important;
+    padding: 6px 12px !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
   }
-  .attendance-controls .btn {
-    width: 100%;
-    justify-content: center;
+  .attendance-controls .btn-outline {
+    width: 100% !important;
+    height: 38px !important;
+    font-size: 12px !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .attendance-controls #saveBtn {
+    grid-column: span 2 !important;
+    width: 100% !important;
+    height: 42px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+  .attendance-sheet-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    box-sizing: border-box !important;
   }
 }
 
@@ -538,7 +655,7 @@
         <h1>Attendance</h1>
         <div class="breadcrumb">Mark and view attendance by date</div>
       </div>
-      <div class="header-right" style="display:flex;gap:8px;flex-wrap:wrap">
+      <div class="header-right">
         <button class="btn btn-outline" onclick="exportAttendanceExcel()" style="font-size:12.5px;font-weight:600">📊 Export to Excel</button>
         <button class="btn btn-outline" onclick="openAbsenceAlertsModal()" style="font-size:12.5px;font-weight:600;color:#047857;border-color:#10B981;background:#ECFDF5">📲 WhatsApp Absence Alerts</button>
       </div>
@@ -623,7 +740,7 @@
                 <span class="card-title" style="margin:0;font-size:14.5px">👨‍🎓 Attendance Sheet</span>
                 <span class="badge badge-info" id="studentCountBadge" style="font-size:11px">0 Students</span>
               </div>
-              <div class="attendance-controls" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <div class="attendance-controls">
                 <input type="text" id="attSearchInput" placeholder="🔍 Find student / roll…" oninput="filterAttendanceList()" style="padding:4px 8px;border:1.5px solid #CBD5E1;border-radius:6px;font-size:11.5px;width:145px;outline:none">
                 <button class="btn btn-outline btn-sm" onclick="markAllPresent()" title="Mark all present in one click" style="padding:4px 9px;font-size:11.5px">✅ All Present</button>
                 <button class="btn btn-outline btn-sm" onclick="markAllAbsent()" title="Mark all absent in one click" style="padding:4px 9px;font-size:11.5px;color:#DC2626;border-color:#FCA5A5">❌ All Absent</button>
@@ -738,11 +855,11 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=10"></script>
-<script src="../js/auth.js?v=10"></script>
-<script src="../js/standard.js?v=10"></script>
-<script src="../js/id-card-helper.js?v=10"></script>
-<script src="../js/attendance.js?v=10"></script>
+<script src="../js/api.js?v=11"></script>
+<script src="../js/auth.js?v=11"></script>
+<script src="../js/standard.js?v=11"></script>
+<script src="../js/id-card-helper.js?v=11"></script>
+<script src="../js/attendance.js?v=11"></script>
 <script>
   initAttendance();
 

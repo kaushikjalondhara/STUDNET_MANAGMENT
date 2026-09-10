@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fees Management — EduManage Pro</title>
-<link rel="stylesheet" href="../css/style.css">
-<link rel="stylesheet" href="../css/dashboard.css">
+<link rel="stylesheet" href="../css/style.css?v=11">
+<link rel="stylesheet" href="../css/dashboard.css?v=11">
 <style>
 /* ─── Fees Management Dedicated Sheet Scroll ─────────── */
 .fee-sheet-card {
@@ -17,16 +17,26 @@
 }
 
 /* ─── Fixed Header & Standard Banner ──────────────── */
-.top-header {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 100 !important;
+@media (min-width: 769px) {
+  .top-header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+  }
+  .std-banner {
+    position: sticky !important;
+    top: 64px !important;
+    z-index: 90 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+  }
 }
-.std-banner {
-  position: sticky !important;
-  top: 64px !important;
-  z-index: 90 !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+@media (max-width: 768px) {
+  .std-banner {
+    position: static !important;
+    top: auto !important;
+    margin-bottom: 8px !important;
+    box-shadow: none !important;
+  }
 }
 
 .fee-sheet-wrap {
@@ -266,11 +276,11 @@
 
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=10"></script>
-<script src="../js/auth.js?v=10"></script>
-<script src="../js/standard.js?v=10"></script>
+<script src="../js/api.js?v=11"></script>
+<script src="../js/auth.js?v=11"></script>
+<script src="../js/standard.js?v=11"></script>
 <script src="../js/print-helper.js?v=10"></script>
-<script src="../js/id-card-helper.js?v=10"></script>
+<script src="../js/id-card-helper.js?v=11"></script>
 <script>
   let allStudentFees = [];
   let cachedSummary = null;
