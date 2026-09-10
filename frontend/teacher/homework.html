@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homework Management — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link active"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Homework & Assignments</h1>
+        <div class="breadcrumb">Assign homework and track submission due dates</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openHwModal()">➕ Assign Homework</button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div id="hwListContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Assign Homework Modal -->
+<div class="modal-overlay" id="hwModal">
+  <div class="modal">
+    <h3 class="modal-title">📚 Assign New Homework</h3>
+    <form onsubmit="submitHomework(event)">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Subject *</label>
+          <input type="text" class="form-control" id="hwSubject" placeholder="Enter Subject (e.g. Maths, Science, Drawing)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Due Date *</label>
+          <input type="date" class="form-control" id="hwDueDate" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Topic / Assignment Title *</label>
+        <input type="text" class="form-control" id="hwTitle" placeholder="e.g. Chapter 4 Exercise 4.2 Questions 1-10" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Instructions / Details *</label>
+        <textarea class="form-control" id="hwDesc" rows="4" placeholder="Write full instructions for students..." required></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeHwModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Assign Homework</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  if (Auth.requireTeacher() && Standard.requireActive()) {
+    Auth.populateTeacherUI();
+    Standard.updateBanners();
+    loadHomework();
+  }
+
+  async function loadHomework() {
+    const std = Standard.getActive();
+    const container = document.getElementById('hwListContainer');
+    const { ok, data } = await Api.getHomework(std);
+    if (!ok) { Toast.error('Failed to load homework.'); return; }
+
+    const list = data.homework || [];
+    if (!list.length) {
+      container.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">📚</div><h3>No homework assigned yet</h3><p>Click "Assign Homework" to add coursework for your class.</p></div></div>';
+      return;
+    }
+
+    container.innerHTML = list.map(h => `
+      <div class="card" style="margin-bottom:16px;border-left:5px solid #4F46E5">
+        <div class="card-body" style="padding:18px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+            <div style="flex:1;min-width:200px">
+              <span class="badge badge-info" style="font-size:12px;margin-right:6px">📖 ${h.subject}</span>
+              <span class="badge badge-danger" style="font-size:12px">⏰ Due: ${h.due_date || 'N/A'}</span>
+              <h3 style="font-size:18px;font-weight:800;color:#1E293B;margin-top:8px;word-break:break-word">${h.title}</h3>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteHw('${h._id}')" style="min-height:38px">🗑️ Delete</button>
+          </div>
+          <p style="color:#475569;font-size:14px;line-height:1.6;margin:12px 0;word-break:break-word">${h.description}</p>
+          <div style="font-size:12px;color:#94A3B8;border-top:1px solid #F1F5F9;padding-top:10px">
+            📅 Assigned on: ${h.created_at ? h.created_at.split('T')[0] : 'Recent'}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function openHwModal() { 
+    document.getElementById('hwModal').classList.add('open'); 
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('hwDueDate').value = tomorrow.toISOString().split('T')[0];
+  }
+  function closeHwModal() { document.getElementById('hwModal').classList.remove('open'); }
+
+  async function submitHomework(e) {
+    e.preventDefault();
+    const std = Standard.getActive();
+    const payload = {
+      standard: std,
+      subject: document.getElementById('hwSubject').value.trim(),
+      title: document.getElementById('hwTitle').value.trim(),
+      due_date: document.getElementById('hwDueDate').value,
+      description: document.getElementById('hwDesc').value.trim()
+    };
+
+    const { ok, data } = await Api.addHomework(payload);
+    if (ok) {
+      Toast.success('Homework assigned successfully!');
+      closeHwModal();
+      document.getElementById('hwSubject').value = '';
+      document.getElementById('hwTitle').value = '';
+      document.getElementById('hwDesc').value = '';
+      loadHomework();
+    } else {
+      Toast.error(data.error || 'Failed to assign homework.');
+    }
+  }
+
+  async function deleteHw(id) {
+    if (!confirm('Are you sure you want to delete this homework?')) return;
+    const { ok } = await Api.deleteHomework(id);
+    if (ok) {
+      Toast.success('Homework deleted.');
+      loadHomework();
+    }
+  }
+</script>
+</body>
+</html>

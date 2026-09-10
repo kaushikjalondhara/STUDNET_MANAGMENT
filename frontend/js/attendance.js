@@ -1,5 +1,5 @@
 /**
- * attendance.js?v=5 — Full date-wise attendance management
+ * attendance.js — Full date-wise attendance management
  */
 
 let attendanceData   = [];      // Current date's attendance list
@@ -53,6 +53,12 @@ async function loadAttendance(dateStr) {
 
   const { ok, data } = await Api.getAttendance(std, dateStr);
   if (!ok) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:30px;color:#DC2626">
+      <div style="font-size:24px;margin-bottom:6px">⚠️</div>
+      <div style="font-weight:700;font-size:14px">${data.error || 'Failed to load attendance.'}</div>
+      <div style="font-size:12px;color:#64748B;margin-top:4px">Make sure the Flask backend is running on port 5000 (<code>python backend/run.py</code>)</div>
+      <button class="btn btn-primary btn-sm" onclick="loadAttendance('${dateStr}')" style="margin-top:12px">🔄 Retry</button>
+    </td></tr>`;
     Toast.error(data.error || 'Failed to load attendance.');
     return;
   }

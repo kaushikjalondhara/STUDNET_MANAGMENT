@@ -3,7 +3,15 @@
  * Base URL: http://localhost:5000/api
  */
 
-const API_BASE = '/api';
+const API_BASE = (function() {
+  if (typeof window !== 'undefined') {
+    const loc = window.location;
+    if (loc.protocol === 'file:' || (loc.port && loc.port !== '5000')) {
+      return 'http://localhost:5000/api';
+    }
+  }
+  return '/api';
+})();
 
 const Api = {
   _token() {
@@ -20,17 +28,27 @@ const Api = {
   },
 
   async _request(method, path, body = null) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const opts = {
       method,
-      headers: this._headers()
+      headers: this._headers(),
+      signal: controller.signal
     };
     if (body !== null) opts.body = JSON.stringify(body);
     try {
       const res = await fetch(API_BASE + path, opts);
+      clearTimeout(timeoutId);
       const data = await res.json().catch(() => ({}));
       return { ok: res.ok, status: res.status, data };
     } catch (err) {
-      return { ok: false, status: 0, data: { error: 'Network error. Is the server running?' } };
+      clearTimeout(timeoutId);
+      const isTimeout = err.name === 'AbortError';
+      const errMsg = isTimeout 
+        ? 'Request timed out. Backend server (port 5000) is not responding.' 
+        : 'Network error. Please make sure backend server is running (python backend/run.py).';
+      return { ok: false, status: 0, data: { error: errMsg } };
     }
   },
 

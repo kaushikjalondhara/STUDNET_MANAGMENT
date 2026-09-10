@@ -230,7 +230,7 @@ const PrintHelper = {
     const utr = t.utr_number || '—';
     const date = t.date || new Date().toLocaleString();
     const mode = t.payment_mode || 'Online UPI';
-    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'Parth classic';
+    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'gyan jyot vidhaya bhavan';
 
     const html = `
       <div class="receipt-frame">
@@ -317,7 +317,7 @@ const PrintHelper = {
   printReport({ title, subtitle, standard, tableHeaders, tableRowsHtml, summaryStatsHtml = '' }) {
     const stdText = standard ? (standard.toString().includes('Standard') ? standard : `Standard ${standard}`) : 'All Classes';
     const now = new Date().toLocaleString();
-    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'Parth classic';
+    const schoolName = (typeof SchoolBranding !== 'undefined' && SchoolBranding.getName) ? SchoolBranding.getName() : 'gyan jyot vidhaya bhavan';
 
     const html = `
       <div>

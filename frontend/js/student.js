@@ -1,5 +1,5 @@
 /**
- * student.js?v=5 — Student portal page logic
+ * student.js — Student portal page logic
  */
 
 const STUDENT_DATE_KEY = 'student_selected_attendance_date';

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Exam Results — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  /* Modal styling */
+  .modal-xl {
+    max-width: 780px;
+  }
+  .subject-entry-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+  }
+  .subject-entry-table th {
+    background: #F1F5F9;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    text-align: left;
+    border-bottom: 2px solid #E2E8F0;
+  }
+  .subject-entry-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #F1F5F9;
+    vertical-align: middle;
+  }
+  .subject-entry-table input {
+    padding: 8px 10px;
+    border: 1.5px solid #CBD5E1;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    width: 100%;
+    outline: none;
+  }
+  .subject-entry-table input:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+  }
+  .live-calc-strip {
+    display: flex;
+    background: linear-gradient(135deg, #EEF2FF 0%, #F5F3FF 100%);
+    border: 1.5px solid #C7D2FE;
+    border-radius: 10px;
+    padding: 14px;
+    margin: 16px 0;
+    justify-content: space-around;
+    text-align: center;
+  }
+  .calc-item-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6366F1;
+    margin-bottom: 2px;
+  }
+  .calc-item-val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1E293B;
+  }
+  .sub-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-width: 280px;
+  }
+  .sub-pill {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+  }
+  @media (max-width: 600px) {
+    .live-calc-strip {
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .live-calc-strip > div {
+      flex: 1 1 40%;
+    }
+    .subject-entry-table {
+      min-width: 440px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link active"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Exam Results</h1>
+        <div class="breadcrumb">Create & manage complete student exam report cards</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openAddResult()">➕ Create Complete Result</button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="card-title">📝 Student Exam Report Cards</span>
+            <span class="badge badge-info" style="margin-left:8px" id="resultCount">0</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Roll No.</th>
+                <th>Student Name</th>
+                <th>Exam Name</th>
+                <th>Subjects & Marks</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr><td colspan="9"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add / Edit Complete Result Modal -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal modal-xl">
+    <h3 class="modal-title" id="resultModalTitle">➕ Create Complete Student Result</h3>
+    <form id="resultForm" onsubmit="submitCompleteResult(event)">
+      <input type="hidden" id="resultId">
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Select Student *</label>
+          <select class="form-control" id="resultStudentId" required>
+            <option value="">— Select Student —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exam Name *</label>
+          <input type="text" class="form-control" id="resultExamName" placeholder="e.g. Final Annual Exam 2026" required value="Final Exam">
+        </div>
+      </div>
+
+      <!-- Subject Marks Table -->
+      <div style="margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label class="form-label" style="margin-bottom:0;font-weight:700">📚 Subject Marks Entry</label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="addCustomSubjectRow()">➕ Add Subject</button>
+        </div>
+
+        <div class="table-wrap">
+          <table class="subject-entry-table">
+            <thead>
+              <tr>
+                <th style="width:40%">Subject</th>
+                <th style="width:25%">Marks Obtained</th>
+                <th style="width:25%">Max Marks</th>
+                <th style="width:10%"></th>
+              </tr>
+            </thead>
+            <tbody id="subjectRowsBody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Calculation Strip -->
+      <div class="live-calc-strip">
+        <div>
+          <div class="calc-item-label">Total Marks</div>
+          <div class="calc-item-val" id="liveTotal">0 / 0</div>
+        </div>
+        <div>
+          <div class="calc-item-label">Percentage</div>
+          <div class="calc-item-val" id="livePct">0.0%</div>
+        </div>
+        <div>
+          <div class="calc-item-label">Grade</div>
+          <div class="calc-item-val" id="liveGrade">—</div>
+        </div>
+        <div>
+          <div class="calc-item-label">Status</div>
+          <div class="calc-item-val" id="liveStatus">—</div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeResultModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveResultBtn">💾 Save Complete Result</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Detailed Marksheet Modal -->
+<div class="modal-overlay" id="marksheetModal">
+  <div class="modal">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:32px">🎓</div>
+      <h3 id="msStudentName" style="font-size:20px;font-weight:800;color:#1E293B;margin-top:4px">Student Marksheet</h3>
+      <p style="color:#64748B;font-size:13px" id="msExamDetails">Final Exam | Standard 5</p>
+    </div>
+
+    <div class="table-wrap">
+      <table class="subject-entry-table" style="margin-bottom:16px">
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th style="text-align:right">Marks Obtained</th>
+            <th style="text-align:right">Max Marks</th>
+            <th style="text-align:right">%</th>
+          </tr>
+        </thead>
+        <tbody id="msSubjectsBody"></tbody>
+        <tfoot>
+          <tr style="background:#F8FAFC;font-weight:800;border-top:2px solid #CBD5E1">
+            <td style="padding:10px">Grand Total</td>
+            <td style="text-align:right;padding:10px" id="msTotalMarks">0</td>
+            <td style="text-align:right;padding:10px" id="msMaxTotal">0</td>
+            <td style="text-align:right;padding:10px" id="msPercentage">0%</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#F1F5F9;padding:12px 16px;border-radius:8px;margin-bottom:16px">
+      <div><strong>Final Grade:</strong> <span class="badge badge-info" id="msGrade" style="font-size:14px">—</span></div>
+      <div><strong>Result:</strong> <span class="badge badge-success" id="msStatus" style="font-size:14px">—</span></div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" onclick="closeMarksheetModal()">Close Marksheet</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js?v=2"></script>
+<script src="../js/auth.js?v=2"></script>
+<script src="../js/standard.js?v=2"></script>
+<script src="../js/id-card-helper.js?v=2"></script>
+<script src="../js/result.js?v=2"></script>
+<script>
+  initResults();
+  document.getElementById('resultModal').addEventListener('click', function(e) {
+    if (e.target === this) closeResultModal();
+  });
+  document.getElementById('marksheetModal').addEventListener('click', function(e) {
+    if (e.target === this) closeMarksheetModal();
+  });
+</script>
+</body>
+</html>

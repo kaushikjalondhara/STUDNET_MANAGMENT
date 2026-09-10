@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Material & Notes — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link active"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Study Material & Chapter Notes</h1>
+        <div class="breadcrumb">Share revision notes, PDF links, and study materials with students</div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-primary" onclick="openNoteModal()">➕ Upload New Notes</button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div id="notesListContainer">
+        <div class="loading-overlay"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <h3 class="modal-title">📖 Add Study Material / Notes</h3>
+    <form onsubmit="submitNote(event)">
+      <div class="form-group">
+        <label class="form-label">Subject *</label>
+        <input type="text" class="form-control" id="noteSubject" placeholder="e.g. Mathematics, Science, Social Studies" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Chapter / Topic Title *</label>
+        <input type="text" class="form-control" id="noteTitle" placeholder="e.g. Chapter 3: Fractions & Decimals Formula Sheet" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Key Points / Summary Description *</label>
+        <textarea class="form-control" id="noteDesc" rows="4" placeholder="Write key revision notes, important formulas, and guidelines..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reference Material Link / PDF URL (Optional)</label>
+        <input type="url" class="form-control" id="noteLink" placeholder="https://drive.google.com/... or resource URL">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeNoteModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btnSubmitNote">Publish Notes & Notify Class</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script>
+  if (Auth.requireTeacher() && Standard.requireActive()) {
+    Auth.populateTeacherUI();
+    Standard.updateBanners();
+    loadNotes();
+  }
+
+  async function loadNotes() {
+    const std = Standard.getActive();
+    const container = document.getElementById('notesListContainer');
+    const { ok, data } = await Api.getNotes(std);
+
+    if (!ok || !data) {
+      container.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">⚠️</div><h3>Failed to load study notes</h3></div></div>';
+      return;
+    }
+
+    const notes = data.notes || [];
+    if (!notes.length) {
+      container.innerHTML = `
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon">📖</div>
+            <h3>No study material uploaded yet</h3>
+            <p>Click "Upload New Notes" above to share revision notes and study resources with Standard ${std} students.</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = notes.map(n => {
+      const dateStr = n.created_at ? n.created_at.split('T')[0] : 'Recent';
+      return `
+        <div class="card" style="margin-bottom:16px;border-left:4px solid #4F46E5">
+          <div class="card-header" style="padding-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="badge badge-info" style="font-size:12px;font-weight:700">${n.subject}</span>
+              <h3 style="font-size:16px;font-weight:800;color:#1E293B;margin:0;word-break:break-word">${n.title}</h3>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <span style="font-size:12px;color:#94A3B8">📅 ${dateStr}</span>
+              <button class="btn btn-danger btn-sm" onclick="removeNote('${n._id}')" style="min-height:38px">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="card-body" style="padding-top:4px">
+            <p style="color:#334155;font-size:14px;white-space:pre-line;line-height:1.6;margin-bottom:12px;word-break:break-word">${n.description}</p>
+            ${n.file_link ? `
+              <a href="${n.file_link}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;color:#4F46E5;border-color:#C7D2FE;min-height:38px;word-break:break-all">
+                🔗 Open Document / Resource Link
+              </a>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openNoteModal() {
+    document.getElementById('noteModal').classList.add('open');
+  }
+
+  function closeNoteModal() {
+    document.getElementById('noteModal').classList.remove('open');
+  }
+
+  async function submitNote(e) {
+    e.preventDefault();
+    const std = Standard.getActive();
+    const subject = document.getElementById('noteSubject').value.trim();
+    const title = document.getElementById('noteTitle').value.trim();
+    const description = document.getElementById('noteDesc').value.trim();
+    const file_link = document.getElementById('noteLink').value.trim();
+
+    const btn = document.getElementById('btnSubmitNote');
+    btn.disabled = true;
+    btn.textContent = 'Publishing…';
+
+    const { ok, data } = await Api.createNote({
+      standard: std,
+      subject,
+      title,
+      description,
+      file_link
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Publish Notes & Notify Class';
+
+    if (ok) {
+      Toast.success('Study notes published! Real-time notification sent to class.');
+      closeNoteModal();
+      document.getElementById('noteSubject').value = '';
+      document.getElementById('noteTitle').value = '';
+      document.getElementById('noteDesc').value = '';
+      document.getElementById('noteLink').value = '';
+      loadNotes();
+    } else {
+      Toast.error(data?.error || 'Failed to publish notes.');
+    }
+  }
+
+  async function removeNote(noteId) {
+    if (!confirm('Are you sure you want to remove this study material?')) return;
+    const { ok } = await Api.deleteNote(noteId);
+    if (ok) {
+      Toast.success('Study material deleted.');
+      loadNotes();
+    } else {
+      Toast.error('Failed to delete note.');
+    }
+  }
+</script>
+</body>
+</html>

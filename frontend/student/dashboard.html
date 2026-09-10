@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .student-date-box {
+    background: linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%);
+    border: 1.5px solid #C7D2FE;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 18px;
+    transition: all 0.2s ease;
+  }
+  .student-date-box:hover {
+    border-color: #818CF8;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+  }
+  .date-picker-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .date-picker-row label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3730A3;
+    margin: 0;
+  }
+  .date-input-field {
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1E293B;
+    background: #FFFFFF;
+    border: 1.5px solid #A5B4FC;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .date-input-field:focus {
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  }
+  .status-result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px dashed #CBD5E1;
+  }
+  .status-label-text {
+    font-size: 13px;
+    color: #475569;
+  }
+  .badge-no-record {
+    background: #F1F5F9;
+    color: #64748B;
+    border: 1px solid #CBD5E1;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Student Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Portal</div>
+      <a href="dashboard.html"     class="nav-link active"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="profile.html"       class="nav-link"><span class="nav-icon">👤</span> My Profile</a>
+      <a href="attendance.html"    class="nav-link"><span class="nav-icon">📅</span> My Attendance</a>
+      <a href="result.html"        class="nav-link"><span class="nav-icon">📝</span> My Results</a>
+      <a href="homework.html"      class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"         class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"     class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="fees.html"          class="nav-link"><span class="nav-icon">💰</span> Student Fees</a>
+      <a href="notices.html"       class="nav-link"><span class="nav-icon">📢</span> Notices</a>
+      <a href="notifications.html" class="nav-link"><span class="nav-icon">🔔</span> Notifications</a>
+      <a href="leave.html"         class="nav-link"><span class="nav-icon">📨</span> Apply Leave</a>
+      <a class="nav-link logout" onclick="Auth.logoutStudent()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="studentInitial">S</div>
+        <div>
+          <div class="teacher-name" id="studentName">Student</div>
+          <div class="teacher-role" id="stdBanner">—</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Student Dashboard</h1>
+        <div class="breadcrumb">Welcome back, <span id="studentStd">—</span> | Roll No: <span id="studentRoll">—</span></div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="stats-grid">
+        <div class="stat-card green-card">
+          <div class="stat-icon green">✅</div>
+          <div class="stat-info">
+            <div class="stat-label">Days Present</div>
+            <div class="stat-value" id="attPresent">—</div>
+          </div>
+        </div>
+        <div class="stat-card red-card">
+          <div class="stat-icon red">❌</div>
+          <div class="stat-info">
+            <div class="stat-label">Days Absent</div>
+            <div class="stat-value" id="attAbsent">—</div>
+          </div>
+        </div>
+        <div class="stat-card blue-card">
+          <div class="stat-icon blue">📊</div>
+          <div class="stat-info">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value" id="attPct">—</div>
+          </div>
+        </div>
+        <div class="stat-card purple-card">
+          <div class="stat-icon purple">🏆</div>
+          <div class="stat-info">
+            <div class="stat-label">Avg Score</div>
+            <div class="stat-value" id="avgScore">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-row-grid">
+        <!-- Attendance Card with Date Picker -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📅 Attendance Status & History</span></div>
+          <div class="card-body">
+            
+            <!-- Date Selection Box -->
+            <div class="student-date-box">
+              <div class="date-picker-row">
+                <label for="studentAttDate">📅 Select Date:</label>
+                <input 
+                  type="date" 
+                  id="studentAttDate" 
+                  class="date-input-field" 
+                  onchange="onStudentDateChange(this.value)"
+                >
+              </div>
+              <div class="status-result-row">
+                <span class="status-label-text">Attendance Status (<b id="displaySelectedDate">—</b>):</span>
+                <span id="dateAttStatusBadge" class="badge-no-record">Checking…</span>
+              </div>
+            </div>
+
+            <!-- Attendance Rate & Progress Bar -->
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;color:#64748B">30-Day Attendance Rate</span>
+              <strong id="attPct2">0%</strong>
+            </div>
+            <div class="progress-wrap">
+              <div class="progress-bar" id="attBar"></div>
+            </div>
+            <a href="attendance.html" class="btn btn-outline btn-sm" style="margin-top:14px">View Full Record →</a>
+          </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">📝 Quick Links</span></div>
+          <div class="card-body">
+            <div class="quick-actions" style="margin-top:0">
+              <a href="profile.html"    class="quick-action-btn"><div class="qa-icon">👤</div><div class="qa-label">My Profile</div></a>
+              <a href="attendance.html" class="quick-action-btn"><div class="qa-icon">📅</div><div class="qa-label">Attendance</div></a>
+              <a href="result.html"     class="quick-action-btn"><div class="qa-icon">📝</div><div class="qa-label">My Results</div></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script src="../js/student.js"></script>
+<script>
+  initStudentDashboard();
+</script>
+</body>
+</html>

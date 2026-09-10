@@ -80,7 +80,16 @@ async function loadStudents() {
   if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>';
 
   const { ok, data } = await Api.getStudents(std);
-  if (!ok) { Toast.error(data.error || 'Failed to load students.'); return; }
+  if (!ok) {
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#DC2626">
+      <div style="font-size:24px;margin-bottom:6px">⚠️</div>
+      <div style="font-weight:700;font-size:14px">${data.error || 'Failed to load students.'}</div>
+      <div style="font-size:12px;color:#64748B;margin-top:4px">Make sure the Flask backend is running on port 5000</div>
+      <button class="btn btn-primary btn-sm" onclick="loadStudents()" style="margin-top:12px">🔄 Retry</button>
+    </td></tr>`;
+    Toast.error(data.error || 'Failed to load students.');
+    return;
+  }
 
   const students = data.students || [];
   window.cachedStudentsList = students;

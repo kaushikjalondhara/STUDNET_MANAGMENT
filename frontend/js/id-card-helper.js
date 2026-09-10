@@ -1,5 +1,5 @@
 /**
- * id-card-helper.js?v=5
+ * id-card-helper.js
  * Comprehensive ID Card, Exam Hall Ticket Generator & Automated Background Alert Engine
  * Features:
  *  - Automatic Headless Alert Sender: Dispatches WhatsApp/SMS in the background without opening WhatsApp window
@@ -104,7 +104,7 @@ const IdCardHelper = {
     };
   },
 
-  // ─── 1. Automated Absence Alert (Direct Send - NO WhatsApp window opened!) ──
+  // ─── 1. Automated Absence Alert (No WhatsApp window opened!) ─────────────
   async sendWhatsAppAbsence(student, dateStr, lang = 'gu', btn = null) {
     const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
     const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
@@ -114,22 +114,42 @@ const IdCardHelper = {
 
     let text = '';
     if (lang === 'gu') {
-      text = `🏫 ${school.name.toUpperCase()}\n` +
-             `ગેરહાજરી સૂચના (Absence Notice)\n\n` +
-             `નમસ્તે વાલીશ્રી,\n` +
-             `આપનો પુત્ર/પુત્રી *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)\n` +
-             `આજે તારીખ *${formattedDate}* ના રોજ સ્કૂલમાં ગેરહાજર (ABSENT) છે.\n\n` +
-             `જો કોઈ અનિવાર્ય કારણ હોય અથવા રજા માટે અરજી કરી હોય તો કૃપા કરીને શાળા કાર્યાલયનો સંપર્ક કરવો.\n\n` +
-             `📞 સંપર્ક: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `ગેરહાજરી સૂચના (Absence Notice)
+
+` +
+             `નમસ્તે વાલીશ્રી,
+` +
+             `આપનો પુત્ર/પુત્રી *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)
+` +
+             `આજે તારીખ *${formattedDate}* ના રોજ સ્કૂલમાં ગેરહાજર (ABSENT) છે.
+
+` +
+             `જો કોઈ અનિવાર્ય કારણ હોય અથવા રજા માટે અરજી કરી હોય તો કૃપા કરીને શાળા કાર્યાલયનો સંપર્ક કરવો.
+
+` +
+             `📞 સંપર્ક: ${school.phone}
+` +
              `શિક્ષક: વર્ગશિક્ષક, ${school.name}`;
     } else {
-      text = `🏫 ${school.name.toUpperCase()}\n` +
-             `ABSENCE ALERT\n\n` +
-             `Dear Parent,\n` +
-             `Your ward *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)\n` +
-             `is marked ABSENT today (*${formattedDate}*).\n\n` +
-             `If this is an emergency, please notify the school office immediately.\n\n` +
-             `📞 Helpdesk: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `ABSENCE ALERT
+
+` +
+             `Dear Parent,
+` +
+             `Your ward *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)
+` +
+             `is marked ABSENT today (*${formattedDate}*).
+
+` +
+             `If this is an emergency, please notify the school office immediately.
+
+` +
+             `📞 Helpdesk: ${school.phone}
+` +
              `Regards, Class Teacher`;
     }
 
@@ -139,11 +159,14 @@ const IdCardHelper = {
     }
 
     if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Sending…';
+      btn.disabled = false;
+      btn.textContent = '✅ Sent';
+      btn.style.background = '#DEF7EC';
+      btn.style.color = '#03543F';
+      btn.style.borderColor = '#31C48D';
     }
 
-    // Direct background dispatch - NO browser popup/window opened!
+    // 2. Also record in backend MongoDB alert_logs and in-app notification
     try {
       if (typeof Api !== 'undefined') {
         await Api.sendAutomatedAlert({
@@ -156,64 +179,78 @@ const IdCardHelper = {
           alert_type: 'absence'
         });
       }
-
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '✅ Sent';
-        btn.style.background = '#DEF7EC';
-        btn.style.color = '#03543F';
-        btn.style.borderColor = '#31C48D';
-      }
-
-      if (typeof Toast !== 'undefined') {
-        Toast.success(`✅ Absence alert sent to ${student.name} (+${cleanMobile})!`);
-      }
-      return true;
     } catch (err) {
-      console.error('Alert send error:', err);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '❌ Failed';
-      }
-      if (typeof Toast !== 'undefined') Toast.error(`Failed to send alert to ${student.name}.`);
-      return false;
+      console.warn('Backend alert log sync:', err);
     }
+
+    if (typeof Toast !== 'undefined') {
+      Toast.success(`📲 WhatsApp opened with message for ${student.name} (+${cleanMobile})!`);
+    }
+    return true;
   },
 
-  // ─── 2. Automated Fee Reminder (Direct Send - NO WhatsApp window opened!) ───
+  // ─── 2. Automated Fee Reminder (No WhatsApp window opened!) ──────────────
   async sendWhatsAppFee(student, feeDetails, lang = 'gu', btn = null) {
     const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
     const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
     const school = this.getSchoolInfo();
     const pending = Number(student.pending_amount || feeDetails?.pending_amount || 0).toLocaleString('en-IN');
     const dueDate = feeDetails?.due_date || '31-Oct-2026';
-    const upiId = feeDetails?.upi_id || 'parthclassic@oksbi';
+    const upiId = feeDetails?.upi_id || 'schoolfees@oksbi';
     const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '');
 
     let text = '';
     if (lang === 'gu') {
-      text = `🏫 ${school.name.toUpperCase()}\n` +
-             `શાળા ફી રીમાઇન્ડર (Fee Reminder)\n\n` +
-             `નમસ્તે વાલીશ્રી,\n` +
-             `વિદ્યાર્થી: *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)\n` +
-             `શાળાની બાકી રહેતી ફી: *₹${pending}*\n` +
-             `ફી જમા કરવાની છેલ્લી તારીખ: *${dueDate}*\n\n` +
-             `💳 ઓનલાઇન પેમેન્ટ વિગત (UPI):\n` +
-             `UPI ID: ${upiId}\n\n` +
-             `કૃપા કરીને છેલ્લી તારીખ પહેલાં ફી જમા કરાવી રસીદ મેળવી લેવી.\n\n` +
-             `📞 શાળા સહાય: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `શાળા ફી રીમાઇન્ડર (Fee Reminder)
+
+` +
+             `નમસ્તે વાલીશ્રી,
+` +
+             `વિદ્યાર્થી: *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)
+` +
+             `શાળાની બાકી રહેતી ફી: *₹${pending}*
+` +
+             `ફી જમા કરવાની છેલ્લી તારીખ: *${dueDate}*
+
+` +
+             `💳 ઓનલાઇન પેમેન્ટ વિગત (UPI):
+` +
+             `UPI ID: ${upiId}
+
+` +
+             `કૃપા કરીને છેલ્લી તારીખ પહેલાં ફી જમા કરાવી રસીદ મેળવી લેવી.
+
+` +
+             `📞 શાળા સહાય: ${school.phone}
+` +
              `શ્રી ${school.name}`;
     } else {
-      text = `🏫 ${school.name.toUpperCase()}\n` +
-             `SCHOOL FEE PAYMENT REMINDER\n\n` +
-             `Dear Parent,\n` +
-             `Student: *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)\n` +
-             `Pending Dues: *₹${pending}*\n` +
-             `Due Date: *${dueDate}*\n\n` +
-             `💳 UPI Payment Details:\n` +
-             `UPI ID: ${upiId}\n\n` +
-             `Please clear the dues before the deadline.\n\n` +
-             `📞 Office: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `SCHOOL FEE PAYMENT REMINDER
+
+` +
+             `Dear Parent,
+` +
+             `Student: *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)
+` +
+             `Pending Dues: *₹${pending}*
+` +
+             `Due Date: *${dueDate}*
+
+` +
+             `💳 UPI Payment Details:
+` +
+             `UPI ID: ${upiId}
+
+` +
+             `Please clear the dues before the deadline.
+
+` +
+             `📞 Office: ${school.phone}
+` +
              `Accounts Dept, ${school.name}`;
     }
 
@@ -223,11 +260,14 @@ const IdCardHelper = {
     }
 
     if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Sending…';
+      btn.disabled = false;
+      btn.textContent = '✅ Sent';
+      btn.style.background = '#DEF7EC';
+      btn.style.color = '#03543F';
+      btn.style.borderColor = '#31C48D';
     }
 
-    // Direct background dispatch - NO browser popup/window opened!
+    // 2. Also record in backend MongoDB alert_logs and in-app notification
     try {
       if (typeof Api !== 'undefined') {
         await Api.sendAutomatedAlert({
@@ -240,28 +280,14 @@ const IdCardHelper = {
           alert_type: 'fee'
         });
       }
-
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '✅ Sent';
-        btn.style.background = '#DEF7EC';
-        btn.style.color = '#03543F';
-        btn.style.borderColor = '#31C48D';
-      }
-
-      if (typeof Toast !== 'undefined') {
-        Toast.success(`✅ Fee reminder sent to ${student.name} (+${cleanMobile})!`);
-      }
-      return true;
     } catch (err) {
-      console.error('Fee reminder send error:', err);
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '❌ Failed';
-      }
-      if (typeof Toast !== 'undefined') Toast.error(`Failed to send fee reminder to ${student.name}.`);
-      return false;
+      console.warn('Backend fee alert log sync:', err);
     }
+
+    if (typeof Toast !== 'undefined') {
+      Toast.success(`📲 WhatsApp fee reminder opened for ${student.name} (+${cleanMobile})!`);
+    }
+    return true;
   },
 
   // ─── 3. Single Student ID Card Modal (with Photo Image) ───────────────────

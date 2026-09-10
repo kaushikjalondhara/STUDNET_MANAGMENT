@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Student — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link active"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Edit Student</h1>
+        <div class="breadcrumb">Update student information</div>
+      </div>
+      <div class="header-right">
+        <a href="students.html" class="btn btn-outline">← Back to Students</a>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <div class="card" style="max-width:620px;margin:0 auto">
+        <div class="card-header">
+          <span class="card-title">✏️ Edit Student Details</span>
+        </div>
+        <div class="card-body">
+          <form id="editStudentForm" onsubmit="submitEditStudent(event)">
+            <input type="hidden" id="editStudentId">
+
+            <div class="form-group">
+              <label class="form-label">Standard (Cannot change)</label>
+              <input type="text" class="form-control" id="editStandard" readonly
+                style="background:#F8FAFC;color:#64748B">
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" class="form-control" id="editName" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Roll Number *</label>
+                <input type="number" class="form-control" id="editRollNo" required min="1">
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-control" id="editEmail">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" id="editMobile" placeholder="9876XXXXXX" maxlength="10" inputmode="numeric">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:6px">
+              <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+                <span>Student Password (Login Password) 🔑 *</span>
+                <span style="font-size:12px;font-weight:normal;color:#64748B">Used for Student Portal Login</span>
+              </label>
+              <div style="position:relative;display:flex;align-items:center">
+                <input type="password" class="form-control" id="editPassword" placeholder="Enter student password" required style="padding-right:145px;font-family:inherit">
+                <div style="position:absolute;right:6px;display:flex;gap:4px">
+                  <button type="button" class="btn btn-outline btn-sm" id="toggleEditPwBtn" onclick="toggleEditPasswordVisibility()" style="padding:4px 8px;font-size:12px;line-height:1">👁️ Show</button>
+                  <button type="button" class="btn btn-outline btn-sm" onclick="copyEditPassword()" style="padding:4px 8px;font-size:12px;line-height:1">📋 Copy</button>
+                </div>
+              </div>
+              <small style="color:#64748B;font-size:12px;margin-top:4px;display:block">
+                ℹ️ Student can log in with their Mobile Number and this Password. You can view, copy, or reset it.
+              </small>
+            </div>
+
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px">
+              <a href="students.html" class="btn btn-outline">Cancel</a>
+              <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script src="../js/teacher.js"></script>
+<script>initEditStudent();</script>
+</body>
+</html>

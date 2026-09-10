@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Reports — EduManage Pro</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/dashboard.css">
+<style>
+  .report-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #E2E8F0;
+    padding-bottom: 12px;
+    overflow-x: auto;
+  }
+  .report-tab-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    font-weight: 700;
+    font-size: 14px;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .report-tab-btn.active {
+    background: #4F46E5;
+    border-color: #4F46E5;
+    color: #fff;
+  }
+  @media print {
+    .sidebar, .top-header, .std-banner, .report-tabs, .btn-print, #toast-container { display: none !important; }
+    .main-content { margin: 0 !important; width: 100% !important; }
+    .page-content { padding: 0 !important; }
+    .card { box-shadow: none !important; border: 1px solid #000 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+    <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏫</div>
+      <div class="logo-text">
+        <h2 class="school-name-text">Parth classic</h2>
+        <span>Teacher Portal</span>
+      </div>
+      <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Main Menu</div>
+      <a href="dashboard.html"   class="nav-link"><span class="nav-icon">📊</span> Dashboard</a>
+      <a href="students.html"    class="nav-link"><span class="nav-icon">👨‍🎓</span> Students Directory</a>
+      <a href="add-student.html" class="nav-link"><span class="nav-icon">➕</span> Enroll Student</a>
+      <a href="attendance.html"  class="nav-link"><span class="nav-icon">📅</span> Attendance</a>
+      <a href="results.html"     class="nav-link"><span class="nav-icon">📝</span> Exam Results</a>
+      <a href="homework.html"    class="nav-link"><span class="nav-icon">📚</span> Homework</a>
+      <a href="notes.html"       class="nav-link"><span class="nav-icon">📖</span> Study Notes</a>
+      <a href="timetable.html"   class="nav-link"><span class="nav-icon">📆</span> Timetable</a>
+      <a href="notices.html"     class="nav-link"><span class="nav-icon">📢</span> Notice Board</a>
+      <a href="leaves.html"      class="nav-link"><span class="nav-icon">📨</span> Leave Requests</a>
+      <a href="fees.html"        class="nav-link"><span class="nav-icon">💰</span> Fees Management</a>
+      <a href="reports.html"     class="nav-link active"><span class="nav-icon">📑</span> Reports & Print</a>
+      <a href="analytics.html"   class="nav-link"><span class="nav-icon">📈</span> Analytics</a>
+
+      <div class="nav-section-label" style="margin-top:6px">System</div>
+      <a onclick="Auth.openSchoolSettingsModal()" class="nav-link" title="Open Master School Settings"><span class="nav-icon">⚙️</span> School Settings <span style="margin-left:auto;font-size:10px;background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px">🔒</span></a>
+      <a class="nav-link logout" onclick="Auth.logout()"><span class="nav-icon">🚪</span> Logout</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="teacher-info">
+        <div class="teacher-avatar" id="teacherInitial">T</div>
+        <div>
+          <div class="teacher-name" id="teacherName">Teacher</div>
+          <div class="teacher-role">Class Teacher</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h1>Official Class Reports</h1>
+        <div class="breadcrumb">Generate, export, and print Attendance, Exam, and Student Reports</div>
+      </div>
+      <div class="header-right" style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="exportCurrentReportExcel()" style="font-weight:700">
+          📊 Export to Excel (.xlsx)
+        </button>
+        <button class="btn btn-primary btn-print" onclick="printActiveReport()" style="background:#0F172A">
+          🖨️ Print Active Report (Clean Page)
+        </button>
+      </div>
+    </header>
+
+    <div class="std-banner">
+      <div class="std-banner-left">
+        <div class="std-banner-icon">🎓</div>
+        <div>
+          <div class="std-banner-label">Active Standard</div>
+          <div class="std-banner-name" id="stdBannerName">Loading…</div>
+        </div>
+      </div>
+      <button class="btn-change-std" onclick="Standard.changeStandard()">🔄 Change Standard</button>
+    </div>
+
+    <div class="page-content">
+      <!-- Report Switcher Tabs -->
+      <div class="report-tabs">
+        <button class="report-tab-btn active" onclick="switchReportTab('attendance', this)">📅 Attendance Report</button>
+        <button class="report-tab-btn" onclick="switchReportTab('results', this)">📝 Result & Rank Report</button>
+        <button class="report-tab-btn" onclick="switchReportTab('students', this)">👨‍🎓 Student Directory Report</button>
+      </div>
+
+      <!-- Tab 1: Attendance Report -->
+      <div id="tabAttendanceReport" class="report-tab-content">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📅 Monthly Student Attendance Summary Report</span>
+              <span class="badge badge-info" id="attReportDate" style="margin-left:8px">Month to Date</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="printReportByType('attendance')">
+              🖨️ Print Attendance Slip
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th style="text-align:center">Days Elapsed</th>
+                  <th style="text-align:center">Present</th>
+                  <th style="text-align:center">Absent</th>
+                  <th style="text-align:right">Attendance Rate</th>
+                </tr>
+              </thead>
+              <tbody id="attReportBody">
+                <tr><td colspan="6" style="text-align:center"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Result Report -->
+      <div id="tabResultReport" class="report-tab-content" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <span class="card-title">📝 Exam Results & Performance Report</span>
+              <span class="badge badge-info" id="resReportSummary" style="margin-left:8px">Results Summary</span>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="printReportByType('results')">
+              🖨️ Print Results Slip
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Student Name</th>
+                  <th>Exam Name</th>
+                  <th style="text-align:right">Marks Obtained</th>
+                  <th style="text-align:right">Percentage</th>
+                  <th style="text-align:center">Grade</th>
+                  <th style="text-align:center">Status</th>
+                </tr>
+              </thead>
+              <tbody id="resReportBody">
+                <tr><td colspan="7" style="text-align:center"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Student Directory Report -->
+      <div id="tabStudentReport" class="report-tab-content" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">👨‍🎓 Complete Student Enrollment Report</span>
+            <button class="btn btn-outline btn-sm" onclick="printReportByType('students')">
+              🖨️ Print Directory Slip
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th>Email</th>
+                  <th>Phone / Mobile</th>
+                  <th>Enrolled Standard</th>
+                </tr>
+              </thead>
+              <tbody id="stuReportBody">
+                <tr><td colspan="5" style="text-align:center"><div class="loading-overlay"><div class="spinner"></div></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div id="toast-container"></div>
+<script src="../js/api.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/standard.js"></script>
+<script src="../js/print-helper.js"></script>
+<script>
+  let activeTabName = 'attendance';
+  let cachedAttData = null;
+  let cachedResData = null;
+  let cachedStuData = null;
+
+  if (Auth.requireTeacher() && Standard.requireActive()) {
+    Auth.populateTeacherUI();
+    Standard.updateBanners();
+    loadAllReports();
+  }
+
+  function switchReportTab(tab, btn) {
+    activeTabName = tab;
+    document.querySelectorAll('.report-tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    document.getElementById('tabAttendanceReport').style.display = tab === 'attendance' ? 'block' : 'none';
+    document.getElementById('tabResultReport').style.display     = tab === 'results' ? 'block' : 'none';
+    document.getElementById('tabStudentReport').style.display    = tab === 'students' ? 'block' : 'none';
+  }
+
+  async function loadAllReports() {
+    const std = Standard.getActive();
+
+    // 1. Attendance Report
+    const { ok: okAtt, data: dataAtt } = await Api.getAttendanceReport(std);
+    if (okAtt && dataAtt) {
+      cachedAttData = dataAtt;
+      const students = dataAtt.students || [];
+      document.getElementById('attReportBody').innerHTML = students.length ? students.map(s => `
+        <tr>
+          <td><b>${s.roll_no}</b></td>
+          <td><b>${s.name}</b></td>
+          <td style="text-align:center">${s.total_days}</td>
+          <td style="text-align:center;color:#059669;font-weight:700">${s.present_days}</td>
+          <td style="text-align:center;color:#DC2626;font-weight:700">${s.absent_days}</td>
+          <td style="text-align:right"><b>${s.attendance_pct}%</b></td>
+        </tr>
+      `).join('') : '<tr><td colspan="6" style="text-align:center;color:#64748B;padding:20px">No attendance records found.</td></tr>';
+    }
+
+    // 2. Result Report
+    const { ok: okRes, data: dataRes } = await Api.getResultReport(std);
+    if (okRes && dataRes) {
+      cachedResData = dataRes;
+      const results = dataRes.results || [];
+      document.getElementById('resReportSummary').textContent = `Avg: ${dataRes.class_average}% | Pass: ${dataRes.pass_count} | Fail: ${dataRes.fail_count}`;
+      document.getElementById('resReportBody').innerHTML = results.length ? results.map((r, i) => `
+        <tr>
+          <td><b>#${i + 1}</b></td>
+          <td><b>${r.student_name}</b></td>
+          <td>${r.exam_name}</td>
+          <td style="text-align:right">${r.total_marks} / ${r.max_total}</td>
+          <td style="text-align:right;font-weight:700">${r.percentage}%</td>
+          <td style="text-align:center"><span class="badge badge-info">${r.grade}</span></td>
+          <td style="text-align:center"><span class="badge ${r.status === 'Pass' ? 'badge-success' : 'badge-danger'}">${r.status}</span></td>
+        </tr>
+      `).join('') : '<tr><td colspan="7" style="text-align:center;color:#64748B;padding:20px">No exam results recorded.</td></tr>';
+    }
+
+    // 3. Student Directory Report
+    const { ok: okStu, data: dataStu } = await Api.getStudents(std);
+    if (okStu && dataStu) {
+      cachedStuData = dataStu;
+      const students = dataStu.students || [];
+      document.getElementById('stuReportBody').innerHTML = students.length ? students.map(s => `
+        <tr>
+          <td><b>${s.roll_no}</b></td>
+          <td><b>${s.name}</b></td>
+          <td>${s.email || '—'}</td>
+          <td>${s.mobile || '—'}</td>
+          <td>Standard ${s.standard}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="5" style="text-align:center;color:#64748B;padding:20px">No students enrolled.</td></tr>';
+    }
+  }
+
+  function printActiveReport() {
+    printReportByType(activeTabName);
+  }
+
+  function printReportByType(type) {
+    const std = Standard.getActive();
+
+    if (type === 'attendance') {
+      const students = cachedAttData?.students || [];
+      const rows = students.map(s => `
+        <tr>
+          <td style="text-align:center;font-weight:700">${s.roll_no}</td>
+          <td><b>${s.name}</b></td>
+          <td style="text-align:center">${s.total_days}</td>
+          <td style="text-align:center;font-weight:700;color:#15803d">${s.present_days}</td>
+          <td style="text-align:center;font-weight:700;color:#b91c1c">${s.absent_days}</td>
+          <td style="text-align:right;font-weight:800">${s.attendance_pct}%</td>
+        </tr>
+      `).join('');
+
+      PrintHelper.printReport({
+        title: 'MONTHLY STUDENT ATTENDANCE REPORT',
+        subtitle: 'Official Academic Attendance Record',
+        standard: std,
+        tableHeaders: [
+          { label: 'Roll No', style: 'width:70px;text-align:center' },
+          { label: 'Student Full Name' },
+          { label: 'Total Working Days', style: 'text-align:center;width:120px' },
+          { label: 'Present Days', style: 'text-align:center;width:100px' },
+          { label: 'Absent Days', style: 'text-align:center;width:90px' },
+          { label: 'Attendance %', style: 'text-align:right;width:110px' }
+        ],
+        tableRowsHtml: rows || '<tr><td colspan="6" style="text-align:center;padding:20px">No attendance records found.</td></tr>',
+        summaryStatsHtml: `
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:8px 12px;border-radius:6px;font-size:12px">
+            <b>Summary:</b> Total Enrolled: <b>${students.length}</b> Students | Official Academic Term Haazri Record
+          </div>
+        `
+      });
+
+    } else if (type === 'results') {
+      const results = cachedResData?.results || [];
+      const rows = results.map((r, i) => `
+        <tr>
+          <td style="text-align:center;font-weight:700">#${i + 1}</td>
+          <td><b>${r.student_name}</b></td>
+          <td>${r.exam_name}</td>
+          <td style="text-align:right;font-weight:700">${r.total_marks} / ${r.max_total}</td>
+          <td style="text-align:right;font-weight:800">${r.percentage}%</td>
+          <td style="text-align:center;font-weight:700">${r.grade}</td>
+          <td style="text-align:center;font-weight:700;color:${r.status === 'Pass' ? '#15803d' : '#b91c1c'}">${r.status}</td>
+        </tr>
+      `).join('');
+
+      PrintHelper.printReport({
+        title: 'EXAMINATION RESULTS & MERIT REPORT',
+        subtitle: 'Class Performance Evaluation & Grade Sheet',
+        standard: std,
+        tableHeaders: [
+          { label: 'Rank', style: 'width:60px;text-align:center' },
+          { label: 'Student Full Name' },
+          { label: 'Examination Title' },
+          { label: 'Marks (Obtained / Max)', style: 'text-align:right;width:150px' },
+          { label: 'Percentage', style: 'text-align:right;width:90px' },
+          { label: 'Grade', style: 'text-align:center;width:70px' },
+          { label: 'Status', style: 'text-align:center;width:80px' }
+        ],
+        tableRowsHtml: rows || '<tr><td colspan="7" style="text-align:center;padding:20px">No exam results found.</td></tr>',
+        summaryStatsHtml: cachedResData ? `
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:8px 12px;border-radius:6px;font-size:12px;display:flex;justify-content:space-between">
+            <span>Class Average: <b>${cachedResData.class_average}%</b></span>
+            <span>Students Passed: <b style="color:#15803d">${cachedResData.pass_count}</b></span>
+            <span>Students Failed: <b style="color:#b91c1c">${cachedResData.fail_count}</b></span>
+          </div>
+        ` : ''
+      });
+
+    } else if (type === 'students') {
+      const students = cachedStuData?.students || [];
+      const rows = students.map(s => `
+        <tr>
+          <td style="text-align:center;font-weight:700">${s.roll_no}</td>
+          <td><b>${s.name}</b></td>
+          <td>${s.mobile || '—'}</td>
+          <td>${s.email || '—'}</td>
+          <td style="text-align:center">Standard ${s.standard}</td>
+        </tr>
+      `).join('');
+
+      PrintHelper.printReport({
+        title: 'CLASS STUDENT ENROLLMENT REGISTER',
+        subtitle: 'Official Student Directory & Parent Contact List',
+        standard: std,
+        tableHeaders: [
+          { label: 'Roll No', style: 'width:70px;text-align:center' },
+          { label: 'Student Full Name' },
+          { label: 'Registered Mobile Number', style: 'width:180px' },
+          { label: 'Email Address' },
+          { label: 'Class / Standard', style: 'width:120px;text-align:center' }
+        ],
+        tableRowsHtml: rows || '<tr><td colspan="5" style="text-align:center;padding:20px">No students enrolled.</td></tr>',
+        summaryStatsHtml: `
+          <div style="background:#f8fafc;border:1px solid #cbd5e1;padding:8px 12px;border-radius:6px;font-size:12px">
+            <b>Total Active Students:</b> ${students.length} Students enrolled in Standard ${std}
+          </div>
+        `
+      });
+    }
+  }
+
+  async function exportCurrentReportExcel() {
+    const std = Standard.getActive();
+    try {
+      if (activeTab === 'attendance') {
+        Toast.info(`Exporting Standard ${std} attendance sheet…`);
+        await Api.exportAttendance(std);
+      } else {
+        Toast.info(`Exporting Standard ${std} students directory…`);
+        await Api.exportStudents(std);
+      }
+      Toast.success('Excel file exported successfully!');
+    } catch (err) {
+      Toast.error(err.message || 'Failed to export report.');
+    }
+  }
+</script>
+</body>
+</html>
