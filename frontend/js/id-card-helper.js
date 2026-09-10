@@ -131,48 +131,39 @@ const IdCardHelper = {
       return false;
     }
 
+    // 1. Open WhatsApp Web / App with prefilled message so message is delivered to WhatsApp
+    const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+
     if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Sending…';
+      btn.disabled = false;
+      btn.textContent = '✅ Sent';
+      btn.style.background = '#DEF7EC';
+      btn.style.color = '#03543F';
+      btn.style.borderColor = '#31C48D';
     }
 
+    // 2. Also record in backend MongoDB alert_logs and in-app notification
     try {
-      // Background automated HTTP dispatch via backend
-      const { ok, data } = await Api.sendAutomatedAlert({
-        student_id: student.student_id || student._id,
-        student_name: student.name,
-        roll_no: student.roll_no,
-        standard: std,
-        mobile: cleanMobile,
-        message: text,
-        alert_type: 'absence'
-      });
-
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '✅ Sent';
-        btn.style.background = '#DEF7EC';
-        btn.style.color = '#03543F';
-        btn.style.borderColor = '#31C48D';
-      }
-
-      if (ok) {
-        if (typeof Toast !== 'undefined') {
-          Toast.success(`📲 Alert sent automatically to +${cleanMobile} for ${student.name}!`);
-        }
-        return true;
-      } else {
-        if (typeof Toast !== 'undefined') Toast.error(data?.error || 'Failed to dispatch alert.');
-        return false;
+      if (typeof Api !== 'undefined') {
+        await Api.sendAutomatedAlert({
+          student_id: student.student_id || student._id,
+          student_name: student.name,
+          roll_no: student.roll_no,
+          standard: std,
+          mobile: cleanMobile,
+          message: text,
+          alert_type: 'absence'
+        });
       }
     } catch (err) {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '📲 Send';
-      }
-      if (typeof Toast !== 'undefined') Toast.error('Error sending automated alert.');
-      return false;
+      console.warn('Backend alert log sync:', err);
     }
+
+    if (typeof Toast !== 'undefined') {
+      Toast.success(`📲 WhatsApp opened with message for ${student.name} (+${cleanMobile})!`);
+    }
+    return true;
   },
 
   // ─── 2. Automated Fee Reminder (No WhatsApp window opened!) ──────────────
@@ -245,47 +236,39 @@ const IdCardHelper = {
       return false;
     }
 
+    // 1. Open WhatsApp Web / App with prefilled message
+    const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+
     if (btn) {
-      btn.disabled = true;
-      btn.textContent = '⏳ Sending…';
+      btn.disabled = false;
+      btn.textContent = '✅ Sent';
+      btn.style.background = '#DEF7EC';
+      btn.style.color = '#03543F';
+      btn.style.borderColor = '#31C48D';
     }
 
+    // 2. Also record in backend MongoDB alert_logs and in-app notification
     try {
-      const { ok, data } = await Api.sendAutomatedAlert({
-        student_id: student.student_id || student._id,
-        student_name: student.name,
-        roll_no: student.roll_no,
-        standard: std,
-        mobile: cleanMobile,
-        message: text,
-        alert_type: 'fee'
-      });
-
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '✅ Sent';
-        btn.style.background = '#DEF7EC';
-        btn.style.color = '#03543F';
-        btn.style.borderColor = '#31C48D';
-      }
-
-      if (ok) {
-        if (typeof Toast !== 'undefined') {
-          Toast.success(`📲 Fee reminder sent automatically to +${cleanMobile}!`);
-        }
-        return true;
-      } else {
-        if (typeof Toast !== 'undefined') Toast.error(data?.error || 'Failed to dispatch alert.');
-        return false;
+      if (typeof Api !== 'undefined') {
+        await Api.sendAutomatedAlert({
+          student_id: student.student_id || student._id,
+          student_name: student.name,
+          roll_no: student.roll_no,
+          standard: std,
+          mobile: cleanMobile,
+          message: text,
+          alert_type: 'fee'
+        });
       }
     } catch (err) {
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = '📲 WhatsApp';
-      }
-      if (typeof Toast !== 'undefined') Toast.error('Error sending automated alert.');
-      return false;
+      console.warn('Backend fee alert log sync:', err);
     }
+
+    if (typeof Toast !== 'undefined') {
+      Toast.success(`📲 WhatsApp fee reminder opened for ${student.name} (+${cleanMobile})!`);
+    }
+    return true;
   },
 
   // ─── 3. Single Student ID Card Modal (with Photo Image) ───────────────────
@@ -855,4 +838,11 @@ const IdCardHelper = {
 
 if (typeof window !== 'undefined') {
   window.IdCardHelper = IdCardHelper;
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => IdCardHelper.injectStyles());
+    } else {
+      IdCardHelper.injectStyles();
+    }
+  }
 }
