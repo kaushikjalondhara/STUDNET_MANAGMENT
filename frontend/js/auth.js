@@ -347,7 +347,62 @@ function initMobileNavigation() {
   });
 }
 
-// ─── Universal Notification Bell for Student Header ──────────────────────────
+// ─── Universal Notification Bell & Live Polling for Student ──────────────────
+let _lastNotifCount = null;
+let _notifPollInterval = null;
+
+async function updateNotificationBadges() {
+  if (!Auth.isStudent()) return;
+  if (typeof Api === 'undefined' || typeof Api.getUnreadNotificationsCount !== 'function') return;
+
+  try {
+    const { ok, data } = await Api.getUnreadNotificationsCount();
+    if (!ok || !data) return;
+
+    const count = parseInt(data.unread_count, 10) || 0;
+    const badgeText = count > 99 ? '99+' : String(count);
+
+    // 1. Update top header bell badge
+    const headerBadge = document.querySelector('.notif-bell-link .notif-badge');
+    if (headerBadge) {
+      if (count > 0) {
+        headerBadge.textContent = badgeText;
+        headerBadge.style.display = 'inline-block';
+      } else {
+        headerBadge.style.display = 'none';
+      }
+    }
+
+    // 2. Update sidebar Notifications link badge
+    const notifSidebarLink = document.querySelector('.sidebar-nav a[href*="notifications"]');
+    if (notifSidebarLink) {
+      let sideBadge = notifSidebarLink.querySelector('.notif-badge');
+      if (!sideBadge) {
+        sideBadge = document.createElement('span');
+        sideBadge.className = 'notif-badge';
+        sideBadge.style.cssText = 'background:#EF4444;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:auto;line-height:1.2;display:none;';
+        notifSidebarLink.appendChild(sideBadge);
+      }
+      if (count > 0) {
+        sideBadge.textContent = badgeText;
+        sideBadge.style.display = 'inline-block';
+      } else {
+        sideBadge.style.display = 'none';
+      }
+    }
+
+    // 3. Trigger alert when new notification arrives in background
+    if (_lastNotifCount !== null && count > _lastNotifCount) {
+      const diff = count - _lastNotifCount;
+      Toast.info(`🔔 નવી સૂચના આવી છે! (${diff} New Notification${diff > 1 ? 's' : ''})`);
+      if (typeof loadNotifications === 'function' && window.location.pathname.includes('notifications.html')) {
+        loadNotifications();
+      }
+    }
+    _lastNotifCount = count;
+  } catch (err) {}
+}
+
 async function initNotificationBell() {
   if (!Auth.isStudent()) return;
   const topHeader = document.querySelector('.top-header');
@@ -378,20 +433,14 @@ async function initNotificationBell() {
     bellLink.innerHTML = '🔔<span class="notif-badge" style="display:none;position:absolute;top:-2px;right:-2px;background:#EF4444;color:#fff;font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px;line-height:1">0</span>';
 
     headerRight.prepend(bellLink);
+  }
 
-    // Fetch unread count
-    if (typeof Api !== 'undefined' && typeof Api.getUnreadNotificationsCount === 'function') {
-      try {
-        const { ok, data } = await Api.getUnreadNotificationsCount();
-        if (ok && data && data.unread_count > 0) {
-          const badge = bellLink.querySelector('.notif-badge');
-          if (badge) {
-            badge.textContent = data.unread_count;
-            badge.style.display = 'inline-block';
-          }
-        }
-      } catch (err) {}
-    }
+  // Update badges immediately
+  updateNotificationBadges();
+
+  // Start background auto-polling every 15 seconds
+  if (!_notifPollInterval) {
+    _notifPollInterval = setInterval(updateNotificationBadges, 15000);
   }
 }
 

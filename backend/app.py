@@ -29,6 +29,12 @@ def create_app():
     from database.db import init_db
     init_db(app)
 
+    try:
+        from models.notification_model import sync_missing_notice_notifications
+        sync_missing_notice_notifications()
+    except Exception as e:
+        print("  → Note: Notification sync skipped:", e)
+
     from routes.auth_routes import auth_bp
     from routes.teacher_routes import teacher_bp
     from routes.student_routes import student_bp

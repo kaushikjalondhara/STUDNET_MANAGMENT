@@ -36,7 +36,8 @@ def unread_count():
 @notification_bp.route('/read/<id>', methods=['PUT'])
 @student_required
 def read_one(id):
-    ok = mark_notification_read(id)
+    student_id = get_jwt_identity()
+    ok = mark_notification_read(id, student_id)
     return jsonify({'success': True, 'modified': ok})
 
 @notification_bp.route('/read-all', methods=['PUT'])

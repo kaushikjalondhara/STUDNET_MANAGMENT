@@ -193,8 +193,25 @@
               <a href="profile.html"    class="quick-action-btn"><div class="qa-icon">👤</div><div class="qa-label">My Profile</div></a>
               <a href="attendance.html" class="quick-action-btn"><div class="qa-icon">📅</div><div class="qa-label">Attendance</div></a>
               <a href="result.html"     class="quick-action-btn"><div class="qa-icon">📝</div><div class="qa-label">My Results</div></a>
+              <a href="notices.html"    class="quick-action-btn"><div class="qa-icon">📢</div><div class="qa-label">Notices</div></a>
+              <a href="homework.html"   class="quick-action-btn"><div class="qa-icon">📚</div><div class="qa-label">Homework</div></a>
+              <a href="notifications.html" class="quick-action-btn"><div class="qa-icon">🔔</div><div class="qa-label">Notifications</div></a>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Recent Announcements & Notices -->
+      <div class="card" style="margin-top:20px">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <span class="card-title">📢 Recent Announcements & Notices (તાજેતરની સૂચનાઓ)</span>
+          <div style="display:flex;gap:8px">
+            <a href="notices.html" class="btn btn-outline btn-sm">All Notices →</a>
+            <a href="notifications.html" class="btn btn-outline btn-sm">All Notifications →</a>
+          </div>
+        </div>
+        <div class="card-body" id="dashboardNoticesContainer" style="padding:16px">
+          <div class="loading-overlay"><div class="spinner"></div></div>
         </div>
       </div>
     </div>
@@ -202,10 +219,10 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=12"></script>
-<script src="../js/auth.js?v=12"></script>
-<script src="../js/standard.js?v=12"></script>
-<script src="../js/student.js?v=10"></script>
+<script src="../js/api.js?v=15"></script>
+<script src="../js/auth.js?v=15"></script>
+<script src="../js/standard.js?v=15"></script>
+<script src="../js/student.js?v=15"></script>
 <script>
   initStudentDashboard();
 </script>

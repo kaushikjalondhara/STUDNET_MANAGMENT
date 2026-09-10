@@ -10,6 +10,8 @@ def serialize(doc) -> dict:
         doc['_id'] = str(doc['_id'])
     if 'student_id' in doc and isinstance(doc['student_id'], ObjectId):
         doc['student_id'] = str(doc['student_id'])
+    if 'read_by' in doc and isinstance(doc['read_by'], list):
+        doc['read_by'] = [str(x) for x in doc['read_by']]
     if 'created_at' in doc and isinstance(doc['created_at'], datetime):
         doc['date_formatted'] = doc['created_at'].strftime("%d-%m-%Y")
         doc['datetime_formatted'] = doc['created_at'].strftime("%d-%m-%Y %I:%M %p")
@@ -21,7 +23,8 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
     Creates a notification.
     If student_id is provided, sent to that specific student.
     If standard is provided without student_id, sent to all students in that standard.
-    type_name: 'homework' | 'notice' | 'result' | 'fee' | 'attendance' | 'leave' | 'general'
+    If standard is 0, '0', or None without student_id, sent to ALL students across the school.
+    type_name: 'homework' | 'notice' | 'result' | 'fee' | 'attendance' | 'leave' | 'notes' | 'general'
     """
     # Check if notification type is enabled in School Settings
     try:
@@ -38,64 +41,185 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
         except Exception:
             valid_sid = str(student_id)
 
+    std_val = None
+    if standard is not None:
+        try:
+            std_val = int(standard)
+        except Exception:
+            std_val = None
+
     db = get_db()
     doc = {
         'type': type_name,
         'title': title,
         'message': message,
-        'standard': int(standard) if standard is not None else None,
+        'standard': std_val,
         'student_id': valid_sid,
         'link': link or '',
         'read': False,
+        'read_by': [],
         'created_at': datetime.utcnow()
     }
     res = db.notifications.insert_one(doc)
     return serialize(db.notifications.find_one({'_id': res.inserted_id}))
 
-def get_student_notifications(student_id: str, standard: int, limit: int = 50) -> list:
-    db = get_db()
+def _build_student_query(student_id: str, standard: int) -> dict:
     try:
         sid = ObjectId(student_id)
     except Exception:
         sid = str(student_id)
-    # Match notifications sent specifically to this student OR broadcast to their standard
-    query = {
+
+    try:
+        std_num = int(standard)
+    except Exception:
+        std_num = 1
+
+    str_sid = str(student_id)
+
+    return {
         '$or': [
             {'student_id': sid},
-            {'student_id': str(student_id)},
-            {'standard': int(standard), 'student_id': None},
-            {'standard': None, 'student_id': None}
+            {'student_id': str_sid},
+            {
+                'student_id': {'$in': [None, '', False]},
+                'standard': {'$in': [std_num, str(std_num), 0, '0', None]}
+            },
+            {
+                'student_id': {'$in': [None, '', False]},
+                'standard': {'$exists': False}
+            }
         ]
     }
-    cursor = db.notifications.find(query).sort('created_at', -1).limit(limit)
-    return [serialize(doc) for doc in cursor]
 
-def mark_notification_read(notification_id: str) -> bool:
+def get_student_notifications(student_id: str, standard: int, limit: int = 50) -> list:
     db = get_db()
-    res = db.notifications.update_one({'_id': ObjectId(notification_id)}, {'$set': {'read': True}})
-    return res.modified_count > 0
+    query = _build_student_query(student_id, standard)
+    cursor = db.notifications.find(query).sort('created_at', -1).limit(limit)
+    str_sid = str(student_id)
+    results = []
+    for doc in cursor:
+        serialized = serialize(doc)
+        read_by = doc.get('read_by') or []
+        is_read = False
+        if str_sid in [str(x) for x in read_by]:
+            is_read = True
+        elif doc.get('student_id') and doc.get('read') is True:
+            is_read = True
+        serialized['read'] = is_read
+        results.append(serialized)
+    return results
+
+def mark_notification_read(notification_id: str, student_id: str = None) -> bool:
+    db = get_db()
+    try:
+        oid = ObjectId(notification_id)
+    except Exception:
+        return False
+
+    doc = db.notifications.find_one({'_id': oid})
+    if not doc:
+        return False
+
+    str_sid = str(student_id) if student_id else None
+
+    # If it's a broadcast notification (student_id is None) and student_id is provided
+    if not doc.get('student_id') and str_sid:
+        db.notifications.update_one(
+            {'_id': oid},
+            {'$addToSet': {'read_by': str_sid}}
+        )
+    else:
+        # Personal notification or general mark
+        update = {'$set': {'read': True}}
+        if str_sid:
+            update['$addToSet'] = {'read_by': str_sid}
+        db.notifications.update_one({'_id': oid}, update)
+
+    return True
 
 def mark_all_notifications_read(student_id: str, standard: int) -> int:
     db = get_db()
-    sid = ObjectId(student_id)
-    query = {
-        '$or': [
-            {'student_id': sid},
-            {'standard': int(standard), 'student_id': None}
-        ],
-        'read': False
-    }
-    res = db.notifications.update_many(query, {'$set': {'read': True}})
+    query = _build_student_query(student_id, standard)
+    str_sid = str(student_id)
+    try:
+        sid = ObjectId(student_id)
+    except Exception:
+        sid = str_sid
+
+    # 1. Add student_id to read_by for all matching broadcast & personal notifications
+    res = db.notifications.update_many(query, {'$addToSet': {'read_by': str_sid}})
+
+    # 2. Also set read: True for personal notifications of this student
+    db.notifications.update_many(
+        {'$or': [{'student_id': sid}, {'student_id': str_sid}]},
+        {'$set': {'read': True}}
+    )
     return res.modified_count
 
 def get_unread_count(student_id: str, standard: int) -> int:
     db = get_db()
-    sid = ObjectId(student_id)
+    str_sid = str(student_id)
+    try:
+        sid = ObjectId(student_id)
+    except Exception:
+        sid = str_sid
+    try:
+        std_num = int(standard)
+    except Exception:
+        std_num = 1
+
     query = {
-        '$or': [
-            {'student_id': sid},
-            {'standard': int(standard), 'student_id': None}
-        ],
-        'read': False
+        '$and': [
+            {
+                '$or': [
+                    {'student_id': sid},
+                    {'student_id': str_sid},
+                    {
+                        'student_id': {'$in': [None, '', False]},
+                        'standard': {'$in': [std_num, str(std_num), 0, '0', None]}
+                    },
+                    {
+                        'student_id': {'$in': [None, '', False]},
+                        'standard': {'$exists': False}
+                    }
+                ]
+            },
+            {
+                'read_by': {'$ne': str_sid}
+            },
+            {
+                '$or': [
+                    {'student_id': {'$in': [None, '', False]}},
+                    {'read': {'$ne': True}}
+                ]
+            }
+        ]
     }
     return db.notifications.count_documents(query)
+
+def sync_missing_notice_notifications():
+    """Ensure any notices in db.notices have a corresponding notification in db.notifications."""
+    db = get_db()
+    try:
+        notices = list(db.notices.find())
+        for n in notices:
+            title = f'📢 Notice: {n.get("title", "").strip()}'
+            existing = db.notifications.find_one({'type': 'notice', 'title': title})
+            if not existing:
+                c_at = n.get('created_at') or datetime.utcnow()
+                today_str = c_at.strftime("%d-%m-%Y") if isinstance(c_at, datetime) else ''
+                msg = n.get('description') or n.get('title') or ''
+                doc = {
+                    'type': 'notice',
+                    'title': title,
+                    'message': f'📅 તારીખ / Date: {today_str} — {msg[:120]}',
+                    'standard': n.get('standard', 0),
+                    'student_id': None,
+                    'link': 'notices.html',
+                    'read': False,
+                    'read_by': [],
+                    'created_at': c_at
+                }
+                db.notifications.insert_one(doc)
+    except Exception as e:
+        print("sync_missing_notice_notifications error:", e)

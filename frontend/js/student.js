@@ -188,6 +188,68 @@ async function initStudentDashboard() {
     setElS('resultCount', resRes.data.results?.length || 0);
     setElS('avgScore',    (resRes.data.average_score || 0) + '%');
   }
+
+  // Load recent announcements & notifications
+  loadDashboardNoticesAndAnnouncements();
+}
+
+async function loadDashboardNoticesAndAnnouncements() {
+  const container = document.getElementById('dashboardNoticesContainer');
+  if (!container) return;
+
+  try {
+    const { ok, data } = await Api.getMyNotifications();
+    if (!ok || !data) {
+      container.innerHTML = '<p style="color:#64748B;font-size:13px;margin:0">No recent announcements available.</p>';
+      return;
+    }
+
+    const notifs = data.notifications || [];
+    if (!notifs.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:20px 10px;color:#64748B">
+          <div style="font-size:32px;margin-bottom:6px">📢</div>
+          <p style="font-size:13px;margin:0">No announcements or notifications posted yet.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const typeIcons = {
+      notice: '📢',
+      homework: '📚',
+      fee: '💰',
+      result: '📝',
+      attendance: '📅',
+      notes: '📖',
+      leave: '📨',
+      general: '🔔'
+    };
+
+    const latest = notifs.slice(0, 4);
+    container.innerHTML = latest.map(n => {
+      const type = n.type || 'general';
+      const icon = typeIcons[type] || '🔔';
+      const dateStr = n.datetime_formatted || n.date_formatted || (n.created_at ? n.created_at.split('T')[0] : 'Recent');
+      const isUnread = !n.read;
+      const targetLink = n.link || (type === 'notice' ? 'notices.html' : 'notifications.html');
+
+      return `
+        <a href="${targetLink}" style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;margin-bottom:8px;background:${isUnread ? '#EEF2FF' : '#F8FAFC'};border-radius:10px;border-left:4px solid ${isUnread ? '#4F46E5' : '#CBD5E1'};text-decoration:none;color:inherit;transition:all 0.2s;cursor:pointer">
+          <div style="font-size:20px;flex-shrink:0;margin-top:2px">${icon}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+              <h4 style="font-size:14px;font-weight:700;color:#1E293B;margin:0">${n.title}</h4>
+              <span style="font-size:11px;color:#64748B;background:#fff;padding:2px 6px;border-radius:4px;font-weight:600">📅 ${dateStr}</span>
+            </div>
+            <p style="font-size:12.5px;color:#475569;margin:4px 0 0;line-height:1.4">${n.message || 'Click to view details'}</p>
+          </div>
+        </a>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = '<p style="color:#64748B;font-size:13px;margin:0">Could not load announcements.</p>';
+  }
 }
 
 // ─── Profile Initialization ──────────────────────────────────────────────────
