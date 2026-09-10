@@ -215,18 +215,35 @@ async function initStudentProfile() {
 function openMyIdCard() {
   if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
     IdCardHelper.showIdCard(window.myStudentProfile);
-  } else {
-    Toast.error('Profile details not loaded.');
+  } else if (typeof Api !== 'undefined') {
+    Api.myProfile().then(({ ok, data }) => {
+      if (ok && data.student) {
+        window.myStudentProfile = data.student;
+        if (typeof IdCardHelper !== 'undefined') IdCardHelper.showIdCard(data.student);
+      } else {
+        Toast.error('Profile details not loaded.');
+      }
+    });
   }
 }
 
 function openMyHallTicket() {
   if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
     IdCardHelper.showHallTicket(window.myStudentProfile);
-  } else {
-    Toast.error('Profile details not loaded.');
+  } else if (typeof Api !== 'undefined') {
+    Api.myProfile().then(({ ok, data }) => {
+      if (ok && data.student) {
+        window.myStudentProfile = data.student;
+        if (typeof IdCardHelper !== 'undefined') IdCardHelper.showHallTicket(data.student);
+      } else {
+        Toast.error('Profile details not loaded.');
+      }
+    });
   }
 }
+
+window.openMyIdCard = openMyIdCard;
+window.openMyHallTicket = openMyHallTicket;
 
 // ─── Attendance Page Initialization ──────────────────────────────────────────
 
