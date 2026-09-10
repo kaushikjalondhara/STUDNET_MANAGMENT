@@ -480,6 +480,10 @@
         <h1>Attendance</h1>
         <div class="breadcrumb">Mark and view attendance by date</div>
       </div>
+      <div class="header-right" style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline" onclick="exportAttendanceExcel()" style="font-size:12.5px;font-weight:600">📊 Export to Excel</button>
+        <button class="btn btn-outline" onclick="openAbsenceAlertsModal()" style="font-size:12.5px;font-weight:600;color:#047857;border-color:#10B981;background:#ECFDF5">📲 WhatsApp Absence Alerts</button>
+      </div>
     </header>
 
     <!-- Standard Banner -->
@@ -577,11 +581,12 @@
                     <th style="width:75px">Roll No.</th>
                     <th>Student Name</th>
                     <th style="width:210px">Mark Attendance</th>
-                    <th style="width:110px">Status</th>
+                    <th style="width:105px">Status</th>
+                    <th style="width:115px;text-align:center">WhatsApp 📲</th>
                   </tr>
                 </thead>
                 <tbody id="attendanceBody">
-                  <tr><td colspan="4">
+                  <tr><td colspan="5">
                     <div class="loading-overlay"><div class="spinner"></div></div>
                   </td></tr>
                 </tbody>
@@ -632,11 +637,150 @@
   </main>
 </div>
 
+<!-- ─── Absence WhatsApp Alerts Batch Modal ────────────────────────────── -->
+<div id="absenceAlertsModal" class="id-card-modal-backdrop" style="display:none" onclick="if(event.target===this) closeAbsenceAlertsModal()">
+  <div class="id-card-modal-container" style="max-width:620px">
+    <div class="id-card-modal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">📲</span>
+        <h3 style="margin:0;font-size:16px;color:#1E293B">WhatsApp Absence Alerts (ગેરહાજરી એલર્ટ)</h3>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeAbsenceAlertsModal()">✕</button>
+    </div>
+
+    <div class="id-card-modal-body" style="background:#fff;padding:18px">
+      <div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#166534">
+        <b>Preformatted Message (ગુજરાતી):</b><br/>
+        <i>“નમસ્તે વાલીશ્રી, આપનો પુત્ર/પુત્રી [વિદ્યાર્થી] આજે તારીખ [તારીખ] ના રોજ સ્કૂલમાં ગેરહાજર છે. કોઈ કારણ હોય તો સ્કૂલનો સંપર્ક કરવો.”</i>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:700;font-size:13px;color:#334155" id="absentModalHeading">Absent Students</span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn btn-outline btn-sm" id="btnLangGu" onclick="setAbsenceLang('gu')" style="background:#EEF2FF;font-weight:700">🇮🇳 ગુજરાતી</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnLangEn" onclick="setAbsenceLang('en')">English</button>
+        </div>
+      </div>
+
+      <div id="absentStudentsList" style="max-height:340px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:8px">
+        <!-- Generated dynamically -->
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid #E2E8F0;background:#F8FAFC">
+      <span style="font-size:11.5px;color:#64748B">Clicking send opens WhatsApp with pre-filled message.</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="closeAbsenceAlertsModal()">Done</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast-container"></div>
 <script src="../js/api.js"></script>
 <script src="../js/auth.js"></script>
 <script src="../js/standard.js"></script>
+<script src="../js/id-card-helper.js"></script>
 <script src="../js/attendance.js"></script>
-<script>initAttendance();</script>
+<script>
+  initAttendance();
+
+  let activeAbsenceLang = 'gu';
+
+  function setAbsenceLang(lang) {
+    activeAbsenceLang = lang;
+    const btnGu = document.getElementById('btnLangGu');
+    const btnEn = document.getElementById('btnLangEn');
+    if (btnGu && btnEn) {
+      btnGu.style.background = lang === 'gu' ? '#EEF2FF' : '#fff';
+      btnGu.style.fontWeight = lang === 'gu' ? '700' : '400';
+      btnEn.style.background = lang === 'en' ? '#EEF2FF' : '#fff';
+      btnEn.style.fontWeight = lang === 'en' ? '700' : '400';
+    }
+    renderAbsenceModalList();
+  }
+
+  function openAbsenceAlertsModal() {
+    const m = document.getElementById('absenceAlertsModal');
+    if (m) m.style.display = 'flex';
+    renderAbsenceModalList();
+  }
+
+  function closeAbsenceAlertsModal() {
+    const m = document.getElementById('absenceAlertsModal');
+    if (m) m.style.display = 'none';
+  }
+
+  function renderAbsenceModalList() {
+    const container = document.getElementById('absentStudentsList');
+    if (!container) return;
+
+    const absents = (typeof attendanceData !== 'undefined' ? attendanceData : []).filter(r => r.status === 'absent');
+    const heading = document.getElementById('absentModalHeading');
+    if (heading) heading.textContent = `Absent Students (${absents.length})`;
+
+    if (!absents.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:24px;color:#64748B">
+          <div style="font-size:28px">🎉</div>
+          <b>No students marked Absent!</b>
+          <p style="font-size:11.5px;margin-top:4px">All students are present or attendance is not marked.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const curDate = (typeof currentDate !== 'undefined' && currentDate) ? currentDate : document.getElementById('attendanceDate')?.value;
+
+    container.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#F8FAFC;border-bottom:1px solid #CBD5E1">
+            <th style="padding:8px 10px;text-align:left">Roll</th>
+            <th style="padding:8px 10px;text-align:left">Student</th>
+            <th style="padding:8px 10px;text-align:left">Parent Mobile</th>
+            <th style="padding:8px 10px;text-align:center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${absents.map(s => {
+            const hasMobile = Boolean(s.mobile);
+            return `
+              <tr style="border-bottom:1px solid #F1F5F9">
+                <td style="padding:8px 10px;font-weight:700">${s.roll_no}</td>
+                <td style="padding:8px 10px"><b>${s.name}</b></td>
+                <td style="padding:8px 10px;color:#334155">${s.mobile || '<span style="color:#DC2626">No mobile</span>'}</td>
+                <td style="padding:8px 10px;text-align:center">
+                  <button type="button" class="btn btn-outline btn-sm"
+                    onclick="triggerSingleAbsenceWhatsApp('${s.student_id}')"
+                    ${!hasMobile ? 'disabled style="opacity:0.5"' : ''}
+                    style="color:#047857;border-color:#10B981;padding:3px 8px;font-size:11px">
+                    📲 Send WhatsApp
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function triggerSingleAbsenceWhatsApp(studentId) {
+    const s = (typeof attendanceData !== 'undefined' ? attendanceData : []).find(r => r.student_id === studentId);
+    if (!s) return;
+    const curDate = (typeof currentDate !== 'undefined' && currentDate) ? currentDate : document.getElementById('attendanceDate')?.value;
+    IdCardHelper.sendWhatsAppAbsence(s, curDate, activeAbsenceLang);
+  }
+
+  async function exportAttendanceExcel() {
+    const std = Standard.getActive();
+    try {
+      Toast.info(`Exporting Standard ${std} attendance report…`);
+      await Api.exportAttendance(std);
+      Toast.success('Attendance report exported successfully!');
+    } catch (err) {
+      Toast.error(err.message || 'Failed to export attendance.');
+    }
+  }
+</script>
 </body>
 </html>

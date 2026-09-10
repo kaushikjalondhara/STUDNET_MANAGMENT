@@ -83,6 +83,7 @@ async function loadStudents() {
   if (!ok) { Toast.error(data.error || 'Failed to load students.'); return; }
 
   const students = data.students || [];
+  window.cachedStudentsList = students;
   if (countEl) countEl.textContent = students.length;
 
   if (!students.length) {
@@ -118,14 +119,34 @@ function renderStudentsTable(students, tbody) {
         </div>
       </td>
       <td>
-        <div style="display:flex;gap:6px">
-          <a href="edit-student.html?id=${s._id}" class="btn btn-outline btn-sm">✏️ Edit</a>
-          <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s._id}','${s.name}')">🗑️</button>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline btn-sm" onclick="showStudentIdCard('${s._id}')" title="Print Student ID Card" style="padding:3px 7px;font-size:11px">🪪 ID</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="showStudentHallTicket('${s._id}')" title="Print Exam Hall Ticket" style="padding:3px 7px;font-size:11px">🎫 Ticket</button>
+          <a href="edit-student.html?id=${s._id}" class="btn btn-outline btn-sm" style="padding:3px 7px;font-size:11px">✏️</a>
+          <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s._id}','${s.name}')" style="padding:3px 7px;font-size:11px">🗑️</button>
         </div>
       </td>
     </tr>
   `;
   }).join('');
+}
+
+function showStudentIdCard(studentId) {
+  const s = (window.cachedStudentsList || []).find(item => String(item._id) === String(studentId));
+  if (s && typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.showIdCard(s);
+  } else {
+    Toast.error('Student details not found.');
+  }
+}
+
+function showStudentHallTicket(studentId) {
+  const s = (window.cachedStudentsList || []).find(item => String(item._id) === String(studentId));
+  if (s && typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.showHallTicket(s);
+  } else {
+    Toast.error('Student details not found.');
+  }
 }
 
 function toggleDirectoryPw(studentId) {

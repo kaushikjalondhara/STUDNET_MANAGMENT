@@ -46,8 +46,8 @@ def create_student(data: dict) -> dict:
         'name': data['name'].strip(),
         'roll_no': int(data['roll_no']),
         'standard': int(data['standard']),
-        'email': data.get('email', '').strip().lower() or None,
-        'mobile': data.get('mobile', '').strip() or None,   # ← mobile (login field)
+        'email': (data.get('email') or '').strip().lower() or None,
+        'mobile': (data.get('mobile') or '').strip() or None,   # ← mobile (login field)
         'password': pw_str,
         'password_hash': pw_hash,
         'created_at': datetime.utcnow()
@@ -71,9 +71,9 @@ def update_student(student_id: str, data: dict) -> dict | None:
     if 'roll_no' in allowed:
         allowed['roll_no'] = int(allowed['roll_no'])
     if 'email' in allowed:
-        allowed['email'] = allowed['email'].strip().lower() or None
+        allowed['email'] = (allowed['email'] or '').strip().lower() or None
     if 'mobile' in allowed:
-        allowed['mobile'] = allowed['mobile'].strip() or None
+        allowed['mobile'] = (allowed['mobile'] or '').strip() or None
     if 'password' in data and str(data['password']).strip():
         pw_str = str(data['password']).strip()
         allowed['password'] = pw_str

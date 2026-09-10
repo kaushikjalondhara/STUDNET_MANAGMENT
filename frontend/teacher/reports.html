@@ -88,7 +88,10 @@
         <h1>Official Class Reports</h1>
         <div class="breadcrumb">Generate, export, and print Attendance, Exam, and Student Reports</div>
       </div>
-      <div class="header-right">
+      <div class="header-right" style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="exportCurrentReportExcel()" style="font-weight:700">
+          📊 Export to Excel (.xlsx)
+        </button>
         <button class="btn btn-primary btn-print" onclick="printActiveReport()" style="background:#0F172A">
           🖨️ Print Active Report (Clean Page)
         </button>
@@ -401,6 +404,22 @@
           </div>
         `
       });
+    }
+  }
+
+  async function exportCurrentReportExcel() {
+    const std = Standard.getActive();
+    try {
+      if (activeTab === 'attendance') {
+        Toast.info(`Exporting Standard ${std} attendance sheet…`);
+        await Api.exportAttendance(std);
+      } else {
+        Toast.info(`Exporting Standard ${std} students directory…`);
+        await Api.exportStudents(std);
+      }
+      Toast.success('Excel file exported successfully!');
+    } catch (err) {
+      Toast.error(err.message || 'Failed to export report.');
     }
   }
 </script>

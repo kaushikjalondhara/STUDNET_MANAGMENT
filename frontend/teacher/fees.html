@@ -126,9 +126,11 @@
         <h1>Fees Management</h1>
         <div class="breadcrumb">Track class collections and payments</div>
       </div>
-      <div class="header-right" style="display:flex;align-items:center;gap:8px">
+      <div class="header-right" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="exportFeesExcel()" style="font-weight:600">📊 Export to Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="openFeeWhatsAppModal()" style="color:#047857;border-color:#10B981;background:#ECFDF5;font-weight:600">📲 WhatsApp Dues Alert</button>
         <button class="btn btn-outline btn-sm" onclick="printFeeCollectionReport()">🖨️ Print Slip</button>
-        <button class="btn btn-warning btn-sm" onclick="broadcastFeeReminder()">🔔 Fee Reminder</button>
+        <button class="btn btn-warning btn-sm" onclick="broadcastFeeReminder()">🔔 In-App Reminder</button>
       </div>
     </header>
 
@@ -262,13 +264,21 @@
       return `
         <tr>
           <td><b>${s.roll_no}</b></td>
-          <td><b>${s.name}</b></td>
+          <td>
+            <b>${s.name}</b>
+            ${s.mobile ? `<div style="font-size:10.5px;color:#64748B">📱 ${s.mobile}</div>` : ''}
+          </td>
           <td style="text-align:right">₹${Number(s.total_fee || 0).toLocaleString('en-IN')}</td>
           <td style="text-align:right;color:#059669;font-weight:700">₹${Number(s.paid_amount || 0).toLocaleString('en-IN')}</td>
           <td style="text-align:right;color:#DC2626;font-weight:700">₹${Number(s.pending_amount || 0).toLocaleString('en-IN')}</td>
           <td style="text-align:center"><span class="badge ${badgeClass}">${s.status}</span></td>
           <td style="text-align:center">
-            ${s.status !== 'Paid' ? `<button class="btn btn-outline btn-sm" onclick="sendStudentReminder('${s.student_id}', '${s.name}')">🔔 Remind</button>` : '—'}
+            ${s.status !== 'Paid' ? `
+              <div style="display:flex;gap:4px;justify-content:center">
+                <button class="btn btn-outline btn-sm" onclick="sendStudentFeeWhatsApp('${s.student_id}')" title="Send WhatsApp Fee Reminder" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 7px;font-size:11px;font-weight:600">📲 WhatsApp</button>
+                <button class="btn btn-outline btn-sm" onclick="sendStudentReminder('${s.student_id}', '${s.name}')" title="Send In-App Notification" style="padding:2px 6px;font-size:11px">🔔</button>
+              </div>
+            ` : '—'}
           </td>
         </tr>
       `;
@@ -315,7 +325,29 @@
     }
   }
 
+  function sendStudentFeeWhatsApp(studentId) {
+    const s = allStudentFees.find(item => String(item.student_id) === String(studentId));
+    if (!s) return;
+    const feeInfo = {
+      pending_amount: s.pending_amount,
+      due_date: '31-Oct-2026',
+      upi_id: 'schoolfees@oksbi'
+    };
+    if (typeof IdCardHelper !== 'undefined') {
+      IdCardHelper.sendWhatsAppFee(s, feeInfo, activeFeeLang);
+    }
+  }
 
+  async function exportFeesExcel() {
+    const std = Standard.getActive();
+    try {
+      Toast.info(`Exporting Standard ${std} fee report…`);
+      await Api.exportFees(std);
+      Toast.success('Fee report exported successfully!');
+    } catch (err) {
+      Toast.error(err.message || 'Failed to export fee report.');
+    }
+  }
 
   function printFeeCollectionReport() {
     const std = Standard.getActive();
@@ -353,6 +385,87 @@
     });
   }
 
+  // ─── WhatsApp Fee Modal ───────────────────────────────────────────────────
+  let activeFeeLang = 'gu';
+
+  function setFeeLang(lang) {
+    activeFeeLang = lang;
+    const btnGu = document.getElementById('btnFeeGu');
+    const btnEn = document.getElementById('btnFeeEn');
+    if (btnGu && btnEn) {
+      btnGu.style.background = lang === 'gu' ? '#EEF2FF' : '#fff';
+      btnGu.style.fontWeight = lang === 'gu' ? '700' : '400';
+      btnEn.style.background = lang === 'en' ? '#EEF2FF' : '#fff';
+      btnEn.style.fontWeight = lang === 'en' ? '700' : '400';
+    }
+  }
+
+  function openFeeWhatsAppModal() {
+    const m = document.getElementById('feeWhatsAppModal');
+    if (m) m.style.display = 'flex';
+    renderFeeWhatsAppList();
+  }
+
+  function closeFeeWhatsAppModal() {
+    const m = document.getElementById('feeWhatsAppModal');
+    if (m) m.style.display = 'none';
+  }
+
+  function renderFeeWhatsAppList() {
+    const container = document.getElementById('pendingFeeStudentsList');
+    if (!container) return;
+
+    const pendingStudents = allStudentFees.filter(s => s.status !== 'Paid');
+    const countEl = document.getElementById('pendingCountBadge');
+    if (countEl) countEl.textContent = `${pendingStudents.length} Students with Pending Dues`;
+
+    if (!pendingStudents.length) {
+      container.innerHTML = `
+        <div style="text-align:center;padding:24px;color:#059669">
+          <div style="font-size:30px">🎉</div>
+          <b>All students have cleared their fees!</b>
+          <p style="font-size:11.5px;margin-top:4px">Zero pending dues for this standard.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead>
+          <tr style="background:#F8FAFC;border-bottom:1.5px solid #CBD5E1">
+            <th style="padding:8px 10px;text-align:left">Roll</th>
+            <th style="padding:8px 10px;text-align:left">Student</th>
+            <th style="padding:8px 10px;text-align:right">Pending (₹)</th>
+            <th style="padding:8px 10px;text-align:left">Parent Mobile</th>
+            <th style="padding:8px 10px;text-align:center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${pendingStudents.map(s => {
+            const hasMobile = Boolean(s.mobile);
+            return `
+              <tr style="border-bottom:1px solid #F1F5F9">
+                <td style="padding:8px 10px;font-weight:700">${s.roll_no}</td>
+                <td style="padding:8px 10px"><b>${s.name}</b></td>
+                <td style="padding:8px 10px;text-align:right;font-weight:700;color:#DC2626">₹${Number(s.pending_amount || 0).toLocaleString('en-IN')}</td>
+                <td style="padding:8px 10px;color:#334155">${s.mobile || '<span style="color:#DC2626">No mobile</span>'}</td>
+                <td style="padding:8px 10px;text-align:center">
+                  <button type="button" class="btn btn-outline btn-sm"
+                    onclick="sendStudentFeeWhatsApp('${s.student_id}')"
+                    ${!hasMobile ? 'disabled style="opacity:0.5"' : ''}
+                    style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:3px 8px;font-size:11px;font-weight:600">
+                    📲 Send WhatsApp
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
   // Fast & independent wheel scrolling for fee table
   const feeWrap = document.querySelector('.fee-sheet-wrap');
   if (feeWrap) {
@@ -364,5 +477,43 @@
     }, { passive: false });
   }
 </script>
+
+<!-- ─── WhatsApp Fee Reminder Batch Modal ──────────────────────────────── -->
+<div id="feeWhatsAppModal" class="id-card-modal-backdrop" style="display:none" onclick="if(event.target===this) closeFeeWhatsAppModal()">
+  <div class="id-card-modal-container" style="max-width:640px">
+    <div class="id-card-modal-header">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">📲</span>
+        <h3 style="margin:0;font-size:16px;color:#1E293B">WhatsApp Pending Fee Reminder (ફી એલર્ટ)</h3>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeFeeWhatsAppModal()">✕</button>
+    </div>
+
+    <div class="id-card-modal-body" style="background:#fff;padding:18px">
+      <div style="background:#ECFDF5;border:1.5px solid #A7F3D0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#065F46">
+        <b>Pre-formatted Message Includes:</b> Pending Fee Amount, Due Date (31-Oct-2026), and UPI Payment Details (<code>schoolfees@oksbi</code>).
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span style="font-weight:700;font-size:13px;color:#334155" id="pendingCountBadge">Pending Students</span>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="btn btn-outline btn-sm" id="btnFeeGu" onclick="setFeeLang('gu')" style="background:#EEF2FF;font-weight:700">🇮🇳 ગુજરાતી</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnFeeEn" onclick="setFeeLang('en')">English</button>
+        </div>
+      </div>
+
+      <div id="pendingFeeStudentsList" style="max-height:320px;overflow-y:auto;border:1px solid #E2E8F0;border-radius:8px">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid #E2E8F0;background:#F8FAFC">
+      <span style="font-size:11.5px;color:#64748B">Clicking send opens WhatsApp with pre-filled message.</span>
+      <button type="button" class="btn btn-primary btn-sm" onclick="closeFeeWhatsAppModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/id-card-helper.js"></script>
 </body>
 </html>

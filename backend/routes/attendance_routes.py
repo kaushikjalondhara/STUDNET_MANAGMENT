@@ -38,6 +38,8 @@ def get_attendance():
             'student_id': s['_id'],
             'name':       s['name'],
             'roll_no':    s['roll_no'],
+            'mobile':     s.get('mobile', ''),
+            'email':      s.get('email', ''),
             'status':     record_map.get(s['_id'], 'not_marked')
         })
 

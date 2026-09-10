@@ -236,6 +236,61 @@ const Api = {
   },
   getPublicSchoolInfo() {
     return this.get('/settings/public');
+  },
+
+  // ─── File Download & Bulk Import Helpers ──────────────────────────────────
+  async downloadFile(path, defaultFilename) {
+    const t = this._token();
+    const headers = {};
+    if (t) headers['Authorization'] = `Bearer ${t}`;
+    const mgmt = sessionStorage.getItem('sms_mgmt_token');
+    if (mgmt) headers['X-Management-Token'] = mgmt;
+
+    const res = await fetch(API_BASE + path, { headers });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to download file');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = defaultFilename || 'download.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
+
+  downloadStudentTemplate() {
+    return this.downloadFile('/students/template', 'student_import_template.xlsx');
+  },
+
+  exportStudents(standard) {
+    const q = standard ? `?standard=${standard}` : '';
+    const fn = standard ? `students_standard_${standard}.xlsx` : 'all_students_directory.xlsx';
+    return this.downloadFile(`/students/export${q}`, fn);
+  },
+
+  exportFees(standard) {
+    return this.downloadFile(`/fees/export?standard=${standard}`, `fees_standard_${standard}.xlsx`);
+  },
+
+  exportAttendance(standard) {
+    return this.downloadFile(`/reports/attendance/export?standard=${standard}`, `attendance_standard_${standard}.xlsx`);
+  },
+
+  async importStudents(formData) {
+    const t = this._token();
+    const headers = {};
+    if (t) headers['Authorization'] = `Bearer ${t}`;
+    const res = await fetch(API_BASE + '/students/import', {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    const data = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, data };
   }
 };
 

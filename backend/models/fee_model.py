@@ -188,6 +188,8 @@ def get_standard_fee_summary(standard: int) -> dict:
             'student_id': str(s['_id']),
             'name': s.get('name'),
             'roll_no': s.get('roll_no'),
+            'mobile': s.get('mobile', ''),
+            'email': s.get('email', ''),
             'total_fee': tot,
             'paid_amount': pd,
             'pending_amount': pnd,

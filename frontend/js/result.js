@@ -85,14 +85,26 @@ function renderResults(results) {
       <td><div class="grade-pill ${gradeClass}">${r.grade}</div></td>
       <td><span class="badge ${isPass ? 'badge-success' : 'badge-danger'}">${r.status}</span></td>
       <td>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
           <button class="btn btn-outline btn-sm" title="View Full Marksheet" onclick="viewMarksheet('${r._id}')">👁️</button>
+          <button class="btn btn-outline btn-sm" title="Generate Exam Hall Ticket" onclick="triggerResultHallTicket('${r.student_id}', '${r.student_name}', ${r.roll_no})" style="color:#1E3A8A;border-color:#93C5FD">🎫</button>
           <button class="btn btn-outline btn-sm" title="Edit Result" onclick="openEditResult('${r._id}')">✏️</button>
           <button class="btn btn-danger btn-sm" title="Delete Result" onclick="deleteResult('${r._id}')">🗑️</button>
         </div>
       </td>
     </tr>`;
   }).join('');
+}
+
+function triggerResultHallTicket(studentId, name, rollNo) {
+  if (typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.showHallTicket({
+      _id: studentId,
+      name: name,
+      roll_no: rollNo,
+      standard: Standard.getActive()
+    });
+  }
 }
 
 // ─── Add / Edit Modal Logic ──────────────────────────────────────────────────

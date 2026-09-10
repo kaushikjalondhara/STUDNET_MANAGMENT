@@ -134,3 +134,124 @@ def send_fee_reminder():
         msg = f'Fee reminder broadcasted to all Standard {std} students.'
 
     return jsonify({'success': True, 'message': msg})
+
+
+# ─── Excel Export for Fees ───────────────────────────────────────────────────
+
+import io
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from flask import send_file
+
+@fee_bp.route('/export', methods=['GET'])
+@teacher_required
+def export_fees():
+    """Exports fee collection records of a standard to Excel (.xlsx)."""
+    std_param = request.args.get('standard')
+    if not std_param:
+        return jsonify({'success': False, 'error': 'standard is required.'}), 400
+    std, err = validate_standard(std_param)
+    if err:
+        return err
+
+    summary = get_standard_fee_summary(std)
+    students = summary.get('students', [])
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Std {std} Fee Report"
+
+    # Title Banner
+    ws.merge_cells('A1:H1')
+    t = ws.cell(row=1, column=1)
+    t.value = f"EDUMANAGE PRO - STANDARD {std} FEE COLLECTION REPORT"
+    t.font = Font(name="Arial", size=13, bold=True, color="FFFFFF")
+    t.fill = PatternFill(start_color="047857", end_color="047857", fill_type="solid") # Emerald Green
+    t.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[1].height = 30
+
+    # Summary Row
+    ws.merge_cells('A2:H2')
+    s = ws.cell(row=2, column=1)
+    s.value = f"Total Expected: ₹{summary['total_expected']:,.2f}  |  Collected: ₹{summary['total_collected']:,.2f}  |  Pending: ₹{summary['total_pending']:,.2f}  |  Collection: {summary['collection_pct']}%"
+    s.font = Font(name="Arial", size=10, bold=True, color="065F46")
+    s.fill = PatternFill(start_color="ECFDF5", end_color="ECFDF5", fill_type="solid")
+    s.alignment = Alignment(horizontal="center", vertical="center")
+    ws.row_dimensions[2].height = 22
+
+    # Headers
+    headers = ["Roll No", "Student Name", "Mobile No", "Total Fee (₹)", "Paid (₹)", "Pending (₹)", "Status", "Last Payment Date"]
+    ws.append(headers)
+    ws.row_dimensions[3].height = 24
+
+    header_font = Font(name="Arial", size=10, bold=True, color="047857")
+    header_fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
+    border_thin = Border(
+        left=Side(style='thin', color='E5E7EB'),
+        right=Side(style='thin', color='E5E7EB'),
+        top=Side(style='thin', color='D1D5DB'),
+        bottom=Side(style='thin', color='D1D5DB')
+    )
+
+    for col_num in range(1, len(headers) + 1):
+        c = ws.cell(row=3, column=col_num)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = Alignment(horizontal="center", vertical="center")
+        c.border = border_thin
+
+    # Data Rows
+    row_font = Font(name="Arial", size=10)
+    paid_fill = PatternFill(start_color="DEF7EC", end_color="DEF7EC", fill_type="solid")
+    unpaid_fill = PatternFill(start_color="FDE8E8", end_color="FDE8E8", fill_type="solid")
+    partial_fill = PatternFill(start_color="FEF08A", end_color="FEF08A", fill_type="solid")
+
+    for idx, row in enumerate(students, start=4):
+        ws.append([
+            row.get('roll_no', ''),
+            row.get('name', ''),
+            row.get('mobile') or '—',
+            row.get('total_fee', 0),
+            row.get('paid_amount', 0),
+            row.get('pending_amount', 0),
+            row.get('status', 'Unpaid'),
+            row.get('last_payment') or '—'
+        ])
+        ws.row_dimensions[idx].height = 20
+
+        for col_num in range(1, 9):
+            c = ws.cell(row=idx, column=col_num)
+            c.font = row_font
+            c.border = border_thin
+            if col_num in [1, 3, 7, 8]:
+                c.alignment = Alignment(horizontal="center", vertical="center")
+            elif col_num in [4, 5, 6]:
+                c.alignment = Alignment(horizontal="right", vertical="center")
+                c.number_format = '₹#,##0'
+            else:
+                c.alignment = Alignment(horizontal="left", vertical="center")
+
+            if col_num == 7:
+                st = row.get('status', '')
+                if st == 'Paid':
+                    c.fill = paid_fill
+                elif st == 'Partial':
+                    c.fill = partial_fill
+                else:
+                    c.fill = unpaid_fill
+
+    widths = [12, 28, 18, 16, 16, 16, 14, 20]
+    for i, w in enumerate(widths, start=1):
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        as_attachment=True,
+        download_name=f"fees_standard_{std}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+

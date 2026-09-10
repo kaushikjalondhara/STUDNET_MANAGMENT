@@ -116,7 +116,10 @@ function renderAttendance(records) {
       <td>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="student-avatar-sm">${r.name[0].toUpperCase()}</div>
-          ${r.name}
+          <div>
+            <div>${r.name}</div>
+            ${r.mobile ? `<small style="color:#64748B;font-size:10.5px">📱 ${r.mobile}</small>` : ''}
+          </div>
         </div>
       </td>
       <td>
@@ -132,8 +135,23 @@ function renderAttendance(records) {
           ${r.status === 'not_marked' ? 'Not Marked' : r.status.charAt(0).toUpperCase() + r.status.slice(1)}
         </span>
       </td>
+      <td id="wa_cell_${r.student_id}" style="text-align:center">
+        ${isAbs ? `
+          <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${r.student_id}')" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
+            📲 Alert
+          </button>
+        ` : `<span style="color:#94A3B8;font-size:12px">—</span>`}
+      </td>
     </tr>`;
   }).join('');
+}
+
+function triggerRowAbsenceWhatsApp(studentId) {
+  const s = attendanceData.find(r => r.student_id === studentId);
+  if (!s) return;
+  if (typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.sendWhatsAppAbsence(s, currentDate, typeof activeAbsenceLang !== 'undefined' ? activeAbsenceLang : 'gu');
+  }
 }
 
 function filterAttendanceList() {
@@ -168,6 +186,20 @@ function markAttendance(studentId, status, btn) {
   if (badge) {
     badge.className = `badge ${status === 'present' ? 'badge-success' : 'badge-danger'}`;
     badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  // Update WhatsApp alert cell
+  const waCell = document.getElementById(`wa_cell_${studentId}`);
+  if (waCell) {
+    if (status === 'absent') {
+      waCell.innerHTML = `
+        <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${studentId}')" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
+          📲 Alert
+        </button>
+      `;
+    } else {
+      waCell.innerHTML = `<span style="color:#94A3B8;font-size:12px">—</span>`;
+    }
   }
 
   // Live summary
@@ -254,12 +286,22 @@ async function saveAttendance() {
   if (btn) { btn.disabled = false; btn.textContent = '💾 Save Attendance'; }
 
   if (ok) {
+    const absentCount = attendanceData.filter(r => r.status === 'absent').length;
     Toast.success(data.message || `Attendance saved for ${formatDate(dateStr)}!`);
     // Refresh the history panel
     await loadHistory();
     // Hide the "no records" notice since we just saved
     const noAttEl = document.getElementById('noAttMsg');
     if (noAttEl) noAttEl.style.display = 'none';
+
+    // Auto-prompt to notify parents of absent students
+    if (absentCount > 0 && typeof openAbsenceAlertsModal === 'function') {
+      setTimeout(() => {
+        if (confirm(`📢 ${absentCount} student(s) marked ABSENT today. Would you like to open WhatsApp Absence Alerts to notify parents?`)) {
+          openAbsenceAlertsModal();
+        }
+      }, 500);
+    }
   } else {
     Toast.error(data.error || 'Failed to save attendance.');
   }

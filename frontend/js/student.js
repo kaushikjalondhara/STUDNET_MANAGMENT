@@ -200,6 +200,7 @@ async function initStudentProfile() {
   if (!ok || !data) { Toast.error('Failed to load profile.'); return; }
 
   const s = data.student || {};
+  window.myStudentProfile = s;
   setElS('profileName',   s.name || 'Student');
   setElS('profileRoll',   s.roll_no || '—');
   setElS('profileStd',    `Standard ${s.standard || '—'}`);
@@ -209,6 +210,22 @@ async function initStudentProfile() {
 
   const avatarEl = document.getElementById('profileAvatar');
   if (avatarEl && s.name) avatarEl.textContent = s.name[0].toUpperCase();
+}
+
+function openMyIdCard() {
+  if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.showIdCard(window.myStudentProfile);
+  } else {
+    Toast.error('Profile details not loaded.');
+  }
+}
+
+function openMyHallTicket() {
+  if (window.myStudentProfile && typeof IdCardHelper !== 'undefined') {
+    IdCardHelper.showHallTicket(window.myStudentProfile);
+  } else {
+    Toast.error('Profile details not loaded.');
+  }
 }
 
 // ─── Attendance Page Initialization ──────────────────────────────────────────
