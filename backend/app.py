@@ -81,7 +81,12 @@ def create_app():
 
     @app.route('/api/health')
     def health_check():
-        return jsonify({'status': 'ok', 'message': 'Student Management System is healthy'}), 200
+        from database.db import get_db
+        try:
+            get_db().command('ping')
+            return jsonify({'status': 'ok', 'database': 'connected'}), 200
+        except Exception:
+            return jsonify({'status': 'ok', 'database': 'connecting'}), 200
 
     @app.after_request
     def add_header(response):

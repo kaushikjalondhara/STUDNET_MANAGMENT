@@ -49,6 +49,9 @@
 <script src="../js/auth.js"></script>
 <script src="../js/standard.js"></script>
 <script>
+  // Pre-warm server connection as soon as login page opens
+  fetch('/api/health').catch(() => {});
+
   // Already logged in?
   if (Auth.isLoggedIn() && Auth.isTeacher()) {
     window.location.href = Standard.getActive()
@@ -71,12 +74,21 @@
     const btn = document.getElementById('loginBtn');
     btn.classList.add('loading'); btn.disabled = true;
 
+    // Friendly feedback if backend instance is waking up
+    const slowTimer = setTimeout(() => {
+      if (btn.classList.contains('loading')) {
+        btn.textContent = '⚡ Connecting to server…';
+      }
+    }, 2000);
+
     const { ok, data } = await Api.teacherLogin(
       document.getElementById('email').value.trim(),
       document.getElementById('password').value
     );
 
+    clearTimeout(slowTimer);
     btn.classList.remove('loading'); btn.disabled = false;
+    btn.textContent = 'Sign In to Portal';
 
     if (ok) {
       Auth.saveTeacherSession(data.token, data.teacher);
