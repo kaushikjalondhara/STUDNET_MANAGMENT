@@ -81,6 +81,17 @@ def my_profile():
         return jsonify({'success': False, 'error': 'Student not found.'}), 404
     return jsonify({'success': True, 'student': student})
 
+@student_bp.route('/me/photo', methods=['POST', 'PUT'])
+@student_required
+def update_my_photo():
+    student_id = get_jwt_identity()
+    data = request.get_json(silent=True) or {}
+    photo = data.get('photo') or data.get('photo_url')
+    if not photo:
+        return jsonify({'success': False, 'error': 'Photo image or URL is required.'}), 400
+    updated = update_student(student_id, {'photo': photo})
+    return jsonify({'success': True, 'message': 'Profile photo updated successfully.', 'student': updated})
+
 
 # ─── Excel / CSV Template, Import & Export ───────────────────────────────────
 

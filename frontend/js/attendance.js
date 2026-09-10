@@ -137,7 +137,7 @@ function renderAttendance(records) {
       </td>
       <td id="wa_cell_${r.student_id}" style="text-align:center">
         ${isAbs ? `
-          <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${r.student_id}')" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
+          <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${r.student_id}', this)" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
             📲 Alert
           </button>
         ` : `<span style="color:#94A3B8;font-size:12px">—</span>`}
@@ -146,11 +146,11 @@ function renderAttendance(records) {
   }).join('');
 }
 
-function triggerRowAbsenceWhatsApp(studentId) {
+function triggerRowAbsenceWhatsApp(studentId, btn) {
   const s = attendanceData.find(r => r.student_id === studentId);
   if (!s) return;
   if (typeof IdCardHelper !== 'undefined') {
-    IdCardHelper.sendWhatsAppAbsence(s, currentDate, typeof activeAbsenceLang !== 'undefined' ? activeAbsenceLang : 'gu');
+    IdCardHelper.sendWhatsAppAbsence(s, currentDate, typeof activeAbsenceLang !== 'undefined' ? activeAbsenceLang : 'gu', btn);
   }
 }
 
@@ -193,7 +193,7 @@ function markAttendance(studentId, status, btn) {
   if (waCell) {
     if (status === 'absent') {
       waCell.innerHTML = `
-        <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${studentId}')" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
+        <button type="button" class="btn btn-outline btn-sm" onclick="triggerRowAbsenceWhatsApp('${studentId}', this)" title="Send WhatsApp Absence Alert to Parent" style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:2px 8px;font-size:11px;font-weight:600">
           📲 Alert
         </button>
       `;

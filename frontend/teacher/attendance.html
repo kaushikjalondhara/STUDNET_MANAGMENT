@@ -668,8 +668,13 @@
     </div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-top:1px solid #E2E8F0;background:#F8FAFC">
-      <span style="font-size:11.5px;color:#64748B">Clicking send opens WhatsApp with pre-filled message.</span>
-      <button type="button" class="btn btn-primary btn-sm" onclick="closeAbsenceAlertsModal()">Done</button>
+      <span style="font-size:11.5px;color:#047857;font-weight:600">⚡ Automated Alerts: Sent instantly in background without opening WhatsApp window.</span>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn btn-outline btn-sm" id="btnSendAllAbsent" onclick="sendAllAbsentAlerts()" style="color:#047857;border-color:#10B981;background:#ECFDF5;font-weight:700">
+          ⚡ Send to All Absent
+        </button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="closeAbsenceAlertsModal()">Done</button>
+      </div>
     </div>
   </div>
 </div>
@@ -750,10 +755,10 @@
                 <td style="padding:8px 10px;color:#334155">${s.mobile || '<span style="color:#DC2626">No mobile</span>'}</td>
                 <td style="padding:8px 10px;text-align:center">
                   <button type="button" class="btn btn-outline btn-sm"
-                    onclick="triggerSingleAbsenceWhatsApp('${s.student_id}')"
+                    onclick="triggerSingleAbsenceWhatsApp('${s.student_id}', this)"
                     ${!hasMobile ? 'disabled style="opacity:0.5"' : ''}
-                    style="color:#047857;border-color:#10B981;padding:3px 8px;font-size:11px">
-                    📲 Send WhatsApp
+                    style="color:#047857;border-color:#10B981;background:#ECFDF5;padding:3px 8px;font-size:11px;font-weight:600">
+                    📲 Send Alert
                   </button>
                 </td>
               </tr>
@@ -764,11 +769,36 @@
     `;
   }
 
-  function triggerSingleAbsenceWhatsApp(studentId) {
+  async function triggerSingleAbsenceWhatsApp(studentId, btn) {
     const s = (typeof attendanceData !== 'undefined' ? attendanceData : []).find(r => r.student_id === studentId);
     if (!s) return;
     const curDate = (typeof currentDate !== 'undefined' && currentDate) ? currentDate : document.getElementById('attendanceDate')?.value;
-    IdCardHelper.sendWhatsAppAbsence(s, curDate, activeAbsenceLang);
+    await IdCardHelper.sendWhatsAppAbsence(s, curDate, activeAbsenceLang, btn);
+  }
+
+  async function sendAllAbsentAlerts() {
+    const absents = (typeof attendanceData !== 'undefined' ? attendanceData : []).filter(r => r.status === 'absent' && r.mobile);
+    if (!absents.length) {
+      Toast.warning('No absent students with valid mobile numbers.');
+      return;
+    }
+    const btnAll = document.getElementById('btnSendAllAbsent');
+    if (btnAll) {
+      btnAll.disabled = true;
+      btnAll.textContent = `⏳ Sending (${absents.length})…`;
+    }
+    const curDate = (typeof currentDate !== 'undefined' && currentDate) ? currentDate : document.getElementById('attendanceDate')?.value;
+    let sentCount = 0;
+    for (const s of absents) {
+      const ok = await IdCardHelper.sendWhatsAppAbsence(s, curDate, activeAbsenceLang);
+      if (ok) sentCount++;
+    }
+    if (btnAll) {
+      btnAll.disabled = false;
+      btnAll.textContent = `✅ Sent (${sentCount})`;
+    }
+    Toast.success(`Sent automatic absence alerts to ${sentCount} parents!`);
+    renderAbsenceModalList();
   }
 
   async function exportAttendanceExcel() {

@@ -209,7 +209,13 @@ async function initStudentProfile() {
   setElS('profileEmail',  s.email  || '—');
 
   const avatarEl = document.getElementById('profileAvatar');
-  if (avatarEl && s.name) avatarEl.textContent = s.name[0].toUpperCase();
+  if (avatarEl) {
+    if (s.photo || s.photo_url) {
+      avatarEl.innerHTML = `<img src="${s.photo || s.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="Student Photo" />`;
+    } else if (s.name) {
+      avatarEl.textContent = s.name[0].toUpperCase();
+    }
+  }
 }
 
 function openMyIdCard() {

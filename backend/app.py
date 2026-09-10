@@ -43,6 +43,7 @@ def create_app():
     from routes.report_routes import report_bp
     from routes.note_routes import note_bp
     from routes.settings_routes import settings_bp
+    from routes.alert_routes import alert_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(teacher_bp, url_prefix='/api/teacher')
@@ -58,6 +59,7 @@ def create_app():
     app.register_blueprint(report_bp, url_prefix='/api/reports')
     app.register_blueprint(note_bp, url_prefix='/api/notes')
     app.register_blueprint(settings_bp, url_prefix='/api/settings')
+    app.register_blueprint(alert_bp, url_prefix='/api/alerts')
 
     @app.route('/')
     def index():

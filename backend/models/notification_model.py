@@ -27,13 +27,20 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
     except Exception:
         pass
 
+    valid_sid = None
+    if student_id:
+        try:
+            valid_sid = ObjectId(student_id)
+        except Exception:
+            valid_sid = str(student_id)
+
     db = get_db()
     doc = {
         'type': type_name,
         'title': title,
         'message': message,
         'standard': int(standard) if standard is not None else None,
-        'student_id': ObjectId(student_id) if student_id else None,
+        'student_id': valid_sid,
         'link': link or '',
         'read': False,
         'created_at': datetime.utcnow()
@@ -43,11 +50,15 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
 
 def get_student_notifications(student_id: str, standard: int, limit: int = 50) -> list:
     db = get_db()
-    sid = ObjectId(student_id)
+    try:
+        sid = ObjectId(student_id)
+    except Exception:
+        sid = str(student_id)
     # Match notifications sent specifically to this student OR broadcast to their standard
     query = {
         '$or': [
             {'student_id': sid},
+            {'student_id': str(student_id)},
             {'standard': int(standard), 'student_id': None},
             {'standard': None, 'student_id': None}
         ]

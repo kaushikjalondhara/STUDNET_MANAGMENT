@@ -291,6 +291,24 @@ const Api = {
     });
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
+  },
+
+  // ─── Automated Direct Background Alerts (No WhatsApp window needed) ───────
+  sendAutomatedAlert(data) {
+    return this.post('/alerts/send-whatsapp', data);
+  },
+
+  sendBatchAlerts(recipients, alertType = 'absence') {
+    return this.post('/alerts/send-batch', { recipients, alert_type: alertType });
+  },
+
+  getAlertLogs(standard) {
+    const q = standard ? `?standard=${standard}` : '';
+    return this.get(`/alerts/logs${q}`);
+  },
+
+  updateStudentPhoto(photo) {
+    return this.post('/students/me/photo', { photo });
   }
 };
 

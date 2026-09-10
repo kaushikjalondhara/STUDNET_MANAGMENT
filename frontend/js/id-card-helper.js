@@ -1,12 +1,12 @@
 /**
  * id-card-helper.js
- * Comprehensive ID Card, Exam Hall Ticket Generator & WhatsApp Alert Engine
+ * Comprehensive ID Card, Exam Hall Ticket Generator & Automated Background Alert Engine
  * Features:
+ *  - Automatic Headless Alert Sender: Dispatches WhatsApp/SMS in the background without opening WhatsApp window
+ *  - Official Student Identity Card with Real Student Photo/Image & Photo Upload capability
  *  - Dynamic QR Code generation for student verification
- *  - Official Printable Student Identity Card (Standard CR80 format)
- *  - Official Printable Exam Hall Ticket / Admit Card with exam schedule & rules
+ *  - Official Printable Exam Hall Ticket / Admit Card
  *  - Bulk ID Card Generator for entire class
- *  - Gujarati & English WhatsApp Alert Triggers for Absences & Fee Reminders
  */
 
 const IdCardHelper = {
@@ -14,6 +14,52 @@ const IdCardHelper = {
   getQRCodeUrl(data, size = 150) {
     const encoded = encodeURIComponent(typeof data === 'string' ? data : JSON.stringify(data));
     return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encoded}&margin=4`;
+  },
+
+  // ─── Default Student Photo Generator ─────────────────────────────────────
+  getStudentPhotoUrl(student) {
+    if (student && (student.photo || student.photo_url)) {
+      return student.photo || student.photo_url;
+    }
+    const name = (student && student.name) ? student.name : 'Student';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=180&background=1E3A8A&color=ffffff&bold=true`;
+  },
+
+  // ─── Photo Upload Handler ────────────────────────────────────────────────
+  async handlePhotoUpload(input, studentId) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const dataUrl = e.target.result;
+      const imgEl = document.getElementById(`idCardImg_${studentId}`);
+      if (imgEl) imgEl.src = dataUrl;
+
+      // Update cached object
+      if (window.cachedStudentsList) {
+        const found = window.cachedStudentsList.find(s => String(s._id || s.roll_no) === String(studentId));
+        if (found) found.photo = dataUrl;
+      }
+      if (window.myStudentProfile) {
+        window.myStudentProfile.photo = dataUrl;
+      }
+
+      // Persist to backend database
+      try {
+        if (typeof Api !== 'undefined') {
+          if (studentId && String(studentId).length === 24) {
+            await Api.updateStudent(studentId, { photo: dataUrl });
+          } else {
+            await Api.updateStudentPhoto(dataUrl);
+          }
+          if (typeof Toast !== 'undefined') Toast.success('Student photo updated successfully!');
+        }
+      } catch (err) {
+        console.error('Photo save error:', err);
+      }
+    };
+    reader.readAsDataURL(file);
   },
 
   // ─── School Info Helper ───────────────────────────────────────────────────
@@ -31,95 +77,225 @@ const IdCardHelper = {
     };
   },
 
-  // ─── 1. WhatsApp Absence Alert ────────────────────────────────────────────
-  sendWhatsAppAbsence(student, dateStr, lang = 'gu') {
+  // ─── 1. Automated Absence Alert (No WhatsApp window opened!) ─────────────
+  async sendWhatsAppAbsence(student, dateStr, lang = 'gu', btn = null) {
     const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
     const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
     const school = this.getSchoolInfo();
     const formattedDate = dateStr || new Date().toLocaleDateString('en-GB');
+    const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '');
 
     let text = '';
     if (lang === 'gu') {
-      text = `*🏫 ${school.name.toUpperCase()}*\n` +
-             `*ગેરહાજરી સૂચના (Absence Notice)*\n\n` +
-             `નમસ્તે વાલીશ્રી,\n` +
-             `આપનો પુત્ર/પુત્રી *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '')}*)\n` +
-             `આજે તારીખ *${formattedDate}* ના રોજ સ્કૂલમાં *ગેરહાજર (ABSENT)* છે.\n\n` +
-             `જો કોઈ અનિવાર્ય કારણ હોય અથવા રજા માટે અરજી કરી હોય તો કૃપા કરીને શાળા કાર્યાલયનો સંપર્ક કરવો.\n\n` +
-             `📞 સંપર્ક: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `ગેરહાજરી સૂચના (Absence Notice)
+
+` +
+             `નમસ્તે વાલીશ્રી,
+` +
+             `આપનો પુત્ર/પુત્રી *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)
+` +
+             `આજે તારીખ *${formattedDate}* ના રોજ સ્કૂલમાં ગેરહાજર (ABSENT) છે.
+
+` +
+             `જો કોઈ અનિવાર્ય કારણ હોય અથવા રજા માટે અરજી કરી હોય તો કૃપા કરીને શાળા કાર્યાલયનો સંપર્ક કરવો.
+
+` +
+             `📞 સંપર્ક: ${school.phone}
+` +
              `શિક્ષક: વર્ગશિક્ષક, ${school.name}`;
     } else {
-      text = `*🏫 ${school.name.toUpperCase()}*\n` +
-             `*ABSENCE ALERT*\n\n` +
-             `Dear Parent,\n` +
-             `Your ward *${student.name}* (Roll No: *${student.roll_no}*, Std: *${student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '')}*)\n` +
-             `is marked *ABSENT* today (*${formattedDate}*).\n\n` +
-             `If this is an uninformed absence or an emergency, please notify the school office immediately.\n\n` +
-             `📞 Helpdesk: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `ABSENCE ALERT
+
+` +
+             `Dear Parent,
+` +
+             `Your ward *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)
+` +
+             `is marked ABSENT today (*${formattedDate}*).
+
+` +
+             `If this is an emergency, please notify the school office immediately.
+
+` +
+             `📞 Helpdesk: ${school.phone}
+` +
              `Regards, Class Teacher`;
     }
 
     if (!cleanMobile) {
       if (typeof Toast !== 'undefined') Toast.warning(`No valid mobile number saved for ${student.name}.`);
-      return;
+      return false;
     }
 
-    const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending…';
+    }
+
+    try {
+      // Background automated HTTP dispatch via backend
+      const { ok, data } = await Api.sendAutomatedAlert({
+        student_id: student.student_id || student._id,
+        student_name: student.name,
+        roll_no: student.roll_no,
+        standard: std,
+        mobile: cleanMobile,
+        message: text,
+        alert_type: 'absence'
+      });
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '✅ Sent';
+        btn.style.background = '#DEF7EC';
+        btn.style.color = '#03543F';
+        btn.style.borderColor = '#31C48D';
+      }
+
+      if (ok) {
+        if (typeof Toast !== 'undefined') {
+          Toast.success(`📲 Alert sent automatically to +${cleanMobile} for ${student.name}!`);
+        }
+        return true;
+      } else {
+        if (typeof Toast !== 'undefined') Toast.error(data?.error || 'Failed to dispatch alert.');
+        return false;
+      }
+    } catch (err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📲 Send';
+      }
+      if (typeof Toast !== 'undefined') Toast.error('Error sending automated alert.');
+      return false;
+    }
   },
 
-  // ─── 2. WhatsApp Fee Reminder ─────────────────────────────────────────────
-  sendWhatsAppFee(student, feeDetails, lang = 'gu') {
+  // ─── 2. Automated Fee Reminder (No WhatsApp window opened!) ──────────────
+  async sendWhatsAppFee(student, feeDetails, lang = 'gu', btn = null) {
     const mobile = (student.mobile || '').replace(/[^0-9]/g, '');
     const cleanMobile = mobile.length === 10 ? `91${mobile}` : mobile;
     const school = this.getSchoolInfo();
     const pending = Number(student.pending_amount || feeDetails?.pending_amount || 0).toLocaleString('en-IN');
     const dueDate = feeDetails?.due_date || '31-Oct-2026';
     const upiId = feeDetails?.upi_id || 'schoolfees@oksbi';
+    const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '');
 
     let text = '';
     if (lang === 'gu') {
-      text = `*🏫 ${school.name.toUpperCase()}*\n` +
-             `*શાળા ફી રીમાઇન્ડર (Fee Reminder)*\n\n` +
-             `નમસ્તે વાલીશ્રી,\n` +
-             `વિદ્યાર્થી: *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '')}*)\n` +
-             `શાળાની બાકી રહેતી ફી: *₹${pending}*\n` +
-             `ફી જમા કરવાની છેલ્લી તારીખ: *${dueDate}*\n\n` +
-             `💳 *ઓનલાઇન પેમેન્ટ વિગત (UPI):*\n` +
-             `UPI ID: \`${upiId}\`\n\n` +
-             `કૃપા કરીને છેલ્લી તારીખ પહેલાં ફી જમા કરાવી રસીદ મેળવી લેવી.\n\n` +
-             `📞 શાળા સહાય: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `શાળા ફી રીમાઇન્ડર (Fee Reminder)
+
+` +
+             `નમસ્તે વાલીશ્રી,
+` +
+             `વિદ્યાર્થી: *${student.name}* (રોલ નં: *${student.roll_no}*, ધોરણ: *${std}*)
+` +
+             `શાળાની બાકી રહેતી ફી: *₹${pending}*
+` +
+             `ફી જમા કરવાની છેલ્લી તારીખ: *${dueDate}*
+
+` +
+             `💳 ઓનલાઇન પેમેન્ટ વિગત (UPI):
+` +
+             `UPI ID: ${upiId}
+
+` +
+             `કૃપા કરીને છેલ્લી તારીખ પહેલાં ફી જમા કરાવી રસીદ મેળવી લેવી.
+
+` +
+             `📞 શાળા સહાય: ${school.phone}
+` +
              `શ્રી ${school.name}`;
     } else {
-      text = `*🏫 ${school.name.toUpperCase()}*\n` +
-             `*SCHOOL FEE PAYMENT REMINDER*\n\n` +
-             `Dear Parent,\n` +
-             `Student: *${student.name}* (Roll No: *${student.roll_no}*, Std: *${student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : '')}*)\n` +
-             `Pending Dues: *₹${pending}*\n` +
-             `Due Date: *${dueDate}*\n\n` +
-             `💳 *UPI Payment Details:*\n` +
-             `UPI ID: \`${upiId}\`\n\n` +
-             `Please clear the dues before the deadline to ensure uninterrupted academic services.\n\n` +
-             `📞 Office: ${school.phone}\n` +
+      text = `🏫 ${school.name.toUpperCase()}
+` +
+             `SCHOOL FEE PAYMENT REMINDER
+
+` +
+             `Dear Parent,
+` +
+             `Student: *${student.name}* (Roll No: *${student.roll_no}*, Std: *${std}*)
+` +
+             `Pending Dues: *₹${pending}*
+` +
+             `Due Date: *${dueDate}*
+
+` +
+             `💳 UPI Payment Details:
+` +
+             `UPI ID: ${upiId}
+
+` +
+             `Please clear the dues before the deadline.
+
+` +
+             `📞 Office: ${school.phone}
+` +
              `Accounts Dept, ${school.name}`;
     }
 
     if (!cleanMobile) {
       if (typeof Toast !== 'undefined') Toast.warning(`No valid mobile number saved for ${student.name}.`);
-      return;
+      return false;
     }
 
-    const waUrl = `https://api.whatsapp.com/send?phone=${cleanMobile}&text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending…';
+    }
+
+    try {
+      const { ok, data } = await Api.sendAutomatedAlert({
+        student_id: student.student_id || student._id,
+        student_name: student.name,
+        roll_no: student.roll_no,
+        standard: std,
+        mobile: cleanMobile,
+        message: text,
+        alert_type: 'fee'
+      });
+
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '✅ Sent';
+        btn.style.background = '#DEF7EC';
+        btn.style.color = '#03543F';
+        btn.style.borderColor = '#31C48D';
+      }
+
+      if (ok) {
+        if (typeof Toast !== 'undefined') {
+          Toast.success(`📲 Fee reminder sent automatically to +${cleanMobile}!`);
+        }
+        return true;
+      } else {
+        if (typeof Toast !== 'undefined') Toast.error(data?.error || 'Failed to dispatch alert.');
+        return false;
+      }
+    } catch (err) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = '📲 WhatsApp';
+      }
+      if (typeof Toast !== 'undefined') Toast.error('Error sending automated alert.');
+      return false;
+    }
   },
 
-  // ─── 3. Single Student ID Card Modal ──────────────────────────────────────
+  // ─── 3. Single Student ID Card Modal (with Photo Image) ───────────────────
   showIdCard(student) {
     const school = this.getSchoolInfo();
     const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : 1);
+    const sid = student._id || student.student_id || student.roll_no;
     const qrPayload = {
       school: school.name,
-      id: student._id || student.student_id,
+      id: sid,
       name: student.name,
       roll: student.roll_no,
       std: std,
@@ -127,7 +303,7 @@ const IdCardHelper = {
       verify: 'OFFICIAL_STUDENT_PASS'
     };
     const qrUrl = this.getQRCodeUrl(qrPayload, 140);
-    const photoInitial = student.name ? student.name[0].toUpperCase() : 'S';
+    const photoUrl = this.getStudentPhotoUrl(student);
 
     const modalId = 'idCardModal_' + Date.now();
     const modalHtml = `
@@ -158,8 +334,15 @@ const IdCardHelper = {
                 </div>
 
                 <div class="id-card-body-content">
+                  <!-- Student Photo Image -->
                   <div class="id-card-photo-box">
-                    <div class="id-card-avatar">${photoInitial}</div>
+                    <div class="id-card-img-wrapper" id="idCardPhotoWrap_${sid}">
+                      <img src="${photoUrl}" alt="${student.name}" class="id-student-photo-img" id="idCardImg_${sid}" />
+                    </div>
+                    <label class="id-upload-photo-btn" title="Click to upload student photo from computer">
+                      📷 Upload Photo
+                      <input type="file" accept="image/*" style="display:none" onchange="IdCardHelper.handlePhotoUpload(this, '${sid}')">
+                    </label>
                     <div class="id-card-std-tag">STD ${std}</div>
                   </div>
 
@@ -207,16 +390,18 @@ const IdCardHelper = {
   showHallTicket(student, examTitle = 'Annual Board Examination 2026-27') {
     const school = this.getSchoolInfo();
     const std = student.standard || (typeof Standard !== 'undefined' ? Standard.getActive() : 1);
+    const sid = student._id || student.student_id || student.roll_no;
     const qrPayload = {
       school: school.name,
       admitCard: 'EXAM_VERIFIED',
-      id: student._id || student.student_id,
+      id: sid,
       name: student.name,
       roll: student.roll_no,
       std: std,
       exam: examTitle
     };
     const qrUrl = this.getQRCodeUrl(qrPayload, 140);
+    const photoUrl = this.getStudentPhotoUrl(student);
     const modalId = 'hallTicketModal_' + Date.now();
 
     const subjects = [
@@ -259,31 +444,28 @@ const IdCardHelper = {
                 </div>
               </div>
 
-              <!-- CANDIDATE INFO -->
-              <div class="ticket-candidate-grid">
-                <div class="ticket-info-group">
-                  <span class="t-label">Candidate Name:</span>
-                  <span class="t-val"><b>${student.name}</b></span>
+              <!-- CANDIDATE INFO WITH PHOTO -->
+              <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px">
+                <div class="id-card-img-wrapper" style="width:78px;height:92px;flex-shrink:0">
+                  <img src="${photoUrl}" alt="${student.name}" class="id-student-photo-img" />
                 </div>
-                <div class="ticket-info-group">
-                  <span class="t-label">Roll Number:</span>
-                  <span class="t-val"><b style="font-size:16px;color:#1E3A8A">${student.roll_no}</b></span>
-                </div>
-                <div class="ticket-info-group">
-                  <span class="t-label">Standard & Division:</span>
-                  <span class="t-val">Standard ${std} - Division A</span>
-                </div>
-                <div class="ticket-info-group">
-                  <span class="t-label">Registration / Student ID:</span>
-                  <span class="t-val" style="font-family:monospace">${student._id || student.student_id || 'STU' + student.roll_no}</span>
-                </div>
-                <div class="ticket-info-group">
-                  <span class="t-label">Examination Center:</span>
-                  <span class="t-val">${school.name}, Main Campus</span>
-                </div>
-                <div class="ticket-info-group">
-                  <span class="t-label">Seat / Room Allotment:</span>
-                  <span class="t-val"><b>Room 10${(student.roll_no % 4) + 1} (Desk #${student.roll_no})</b></span>
+                <div class="ticket-candidate-grid" style="flex:1;margin-bottom:0">
+                  <div class="ticket-info-group">
+                    <span class="t-label">Candidate Name:</span>
+                    <span class="t-val"><b>${student.name}</b></span>
+                  </div>
+                  <div class="ticket-info-group">
+                    <span class="t-label">Roll Number:</span>
+                    <span class="t-val"><b style="font-size:16px;color:#1E3A8A">${student.roll_no}</b></span>
+                  </div>
+                  <div class="ticket-info-group">
+                    <span class="t-label">Standard & Division:</span>
+                    <span class="t-val">Standard ${std} - Division A</span>
+                  </div>
+                  <div class="ticket-info-group">
+                    <span class="t-label">Student ID / Seat:</span>
+                    <span class="t-val"><b>Room 10${(student.roll_no % 4) + 1} (Desk #${student.roll_no})</b></span>
+                  </div>
                 </div>
               </div>
 
@@ -357,16 +539,17 @@ const IdCardHelper = {
     const std = typeof Standard !== 'undefined' ? Standard.getActive() : 1;
 
     const cardsHtml = students.map(student => {
+      const sid = student._id || student.student_id || student.roll_no;
       const qrPayload = {
         school: school.name,
-        id: student._id || student.student_id,
+        id: sid,
         name: student.name,
         roll: student.roll_no,
         std: std,
         year: school.academicYear
       };
       const qrUrl = this.getQRCodeUrl(qrPayload, 120);
-      const photoInitial = student.name ? student.name[0].toUpperCase() : 'S';
+      const photoUrl = this.getStudentPhotoUrl(student);
 
       return `
         <div class="official-id-card bulk-card">
@@ -381,7 +564,9 @@ const IdCardHelper = {
 
           <div class="id-card-body-content">
             <div class="id-card-photo-box">
-              <div class="id-card-avatar">${photoInitial}</div>
+              <div class="id-card-img-wrapper">
+                <img src="${photoUrl}" alt="${student.name}" class="id-student-photo-img" />
+              </div>
               <div class="id-card-std-tag">STD ${std}</div>
             </div>
 
@@ -532,12 +717,21 @@ const IdCardHelper = {
       .id-card-photo-box {
         display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0;
       }
-      .id-card-avatar {
-        width: 68px; height: 78px; background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%);
-        border: 2px solid #1E3A8A; border-radius: 8px; display: flex; align-items: center;
-        justify-content: center; font-size: 32px; font-weight: 800; color: #1E3A8A;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      .id-card-img-wrapper {
+        width: 76px; height: 90px; border: 2px solid #1E3A8A; border-radius: 8px;
+        overflow: hidden; background: #E2E8F0; display: flex; align-items: center;
+        justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.12);
       }
+      .id-student-photo-img {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+      }
+      .id-upload-photo-btn {
+        font-size: 8.5px; font-weight: 700; color: #1E3A8A; background: #EFF6FF;
+        border: 1px solid #BFDBFE; padding: 1px 6px; border-radius: 4px; cursor: pointer;
+        margin-top: 2px; margin-bottom: 2px; text-align: center;
+      }
+      .id-upload-photo-btn:hover { background: #DBEAFE; }
+
       .id-card-std-tag {
         background: #1E3A8A; color: #fff; font-size: 10px; font-weight: 700;
         padding: 2px 8px; border-radius: 10px; text-align: center; width: 100%;
@@ -597,7 +791,7 @@ const IdCardHelper = {
       .ticket-candidate-grid {
         display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;
         background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 8px;
-        padding: 12px 16px; margin-bottom: 16px; font-size: 12.5px;
+        padding: 12px 16px; font-size: 12.5px;
       }
       .ticket-info-group { display: flex; gap: 8px; align-items: baseline; }
       .t-label { color: #64748B; font-weight: 600; min-width: 140px; }

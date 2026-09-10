@@ -48,6 +48,7 @@ def create_student(data: dict) -> dict:
         'standard': int(data['standard']),
         'email': (data.get('email') or '').strip().lower() or None,
         'mobile': (data.get('mobile') or '').strip() or None,   # ← mobile (login field)
+        'photo': (data.get('photo') or data.get('photo_url') or '').strip() or None,
         'password': pw_str,
         'password_hash': pw_hash,
         'created_at': datetime.utcnow()
@@ -67,13 +68,17 @@ def create_student(data: dict) -> dict:
 
 def update_student(student_id: str, data: dict) -> dict | None:
     db = get_db()
-    allowed = {k: v for k, v in data.items() if k in ('name', 'email', 'mobile', 'roll_no')}
+    allowed = {k: v for k, v in data.items() if k in ('name', 'email', 'mobile', 'roll_no', 'photo', 'photo_url')}
     if 'roll_no' in allowed:
         allowed['roll_no'] = int(allowed['roll_no'])
     if 'email' in allowed:
         allowed['email'] = (allowed['email'] or '').strip().lower() or None
     if 'mobile' in allowed:
         allowed['mobile'] = (allowed['mobile'] or '').strip() or None
+    if 'photo' in allowed:
+        allowed['photo'] = str(allowed['photo']).strip() or None
+    if 'photo_url' in allowed:
+        allowed['photo'] = str(allowed.pop('photo_url')).strip() or None
     if 'password' in data and str(data['password']).strip():
         pw_str = str(data['password']).strip()
         allowed['password'] = pw_str
