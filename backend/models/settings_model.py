@@ -373,11 +373,16 @@ def update_school_settings(category: str, data: dict) -> dict:
                     std_num = int(std_str)
                     new_tot = float(fee_val)
                     cfg = get_standard_fee_config(std_num)
-                    std_students = list(db.students.find({'standard': std_num}))
                     
-                    for s in std_students:
-                        s_record = db.fees.find_one({'student_id': s['_id']})
-                        if s_record:
+                    # Get all students for this standard
+                    std_students = list(db.students.find({'standard': std_num}))
+                    student_ids = [s['_id'] for s in std_students]
+                    
+                    if student_ids:
+                        # Fetch all fee records for these students in ONE query (N+1 query fix)
+                        fees_records = list(db.fees.find({'student_id': {'$in': student_ids}}))
+                        
+                        for s_record in fees_records:
                             paid = float(s_record.get('paid_amount', 0))
                             new_pnd = max(0.0, new_tot - paid)
                             new_st = 'Paid' if new_pnd <= 0 else ('Partial' if paid > 0 else 'Unpaid')
