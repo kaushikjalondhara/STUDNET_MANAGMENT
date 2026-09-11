@@ -29,22 +29,39 @@ def get_or_create_student_fee(student_id: str, standard: int) -> dict:
     sid = ObjectId(student_id)
     record = db.fees.find_one({'student_id': sid})
     cfg = get_standard_fee_config(standard)
-    std_total_fee = float(cfg.get('total_fee', DEFAULT_TOTAL_FEE))
-
+    
+    base_total_fee = float(cfg.get('total_fee', DEFAULT_TOTAL_FEE))
     current_due_date = cfg.get('due_date', '2026-10-31')
+    
+    try:
+        due_date_obj = datetime.strptime(current_due_date, '%Y-%m-%d').date()
+    except:
+        due_date_obj = date(2026, 10, 31)
+        
+    today = datetime.utcnow().date()
+    is_late = today > due_date_obj
+    late_fee_amt = float(cfg.get('late_fee', 0)) if is_late else 0.0
+    
+    effective_total_fee = base_total_fee + late_fee_amt
+    
+    base_breakdown = list(cfg.get('breakdown', DEFAULT_BREAKDOWN))
+    if is_late and late_fee_amt > 0:
+        base_breakdown.append({
+            'head': 'Late Fee',
+            'amount': late_fee_amt
+        })
 
     if not record:
-        # Create initial fee account for student using standard's configured fees
-        breakdown = cfg.get('breakdown', DEFAULT_BREAKDOWN)
+        # Create initial fee account
         doc = {
             'student_id': sid,
             'standard': int(standard),
-            'total_fee': std_total_fee,
+            'total_fee': effective_total_fee,
             'paid_amount': 0,
-            'pending_amount': std_total_fee,
+            'pending_amount': effective_total_fee,
             'status': 'Unpaid', # 'Unpaid' | 'Partial' | 'Paid'
             'due_date': current_due_date,
-            'breakdown': breakdown,
+            'breakdown': base_breakdown,
             'transactions': [],
             'created_at': datetime.utcnow(),
             'updated_at': datetime.utcnow()
@@ -53,37 +70,32 @@ def get_or_create_student_fee(student_id: str, standard: int) -> dict:
         record = db.fees.find_one({'student_id': sid})
     else:
         updates = {}
-        # Always keep due_date synchronized with school's configured due date
         if record.get('due_date') != current_due_date:
             updates['due_date'] = current_due_date
             record['due_date'] = current_due_date
 
-        # Always keep total_fee, pending_amount, status, and breakdown synchronized with standard's configured fee
-        if record.get('total_fee') != std_total_fee:
+        if record.get('total_fee') != effective_total_fee:
             paid = float(record.get('paid_amount', 0))
-            new_pending = max(0.0, std_total_fee - paid)
+            new_pending = max(0.0, effective_total_fee - paid)
             new_status = 'Paid' if new_pending <= 0 else ('Partial' if paid > 0 else 'Unpaid')
-            new_breakdown = cfg.get('breakdown', record.get('breakdown', DEFAULT_BREAKDOWN))
 
-            updates['total_fee'] = std_total_fee
+            updates['total_fee'] = effective_total_fee
             updates['pending_amount'] = new_pending
             updates['status'] = new_status
-            updates['breakdown'] = new_breakdown
+            updates['breakdown'] = base_breakdown
 
-            record['total_fee'] = std_total_fee
+            record['total_fee'] = effective_total_fee
             record['pending_amount'] = new_pending
             record['status'] = new_status
-            record['breakdown'] = new_breakdown
+            record['breakdown'] = base_breakdown
         else:
             paid = float(record.get('paid_amount', 0))
-            expected_pending = max(0.0, std_total_fee - paid)
+            expected_pending = max(0.0, effective_total_fee - paid)
             expected_status = 'Paid' if expected_pending <= 0 else ('Partial' if paid > 0 else 'Unpaid')
             if record.get('pending_amount') != expected_pending or record.get('status') != expected_status:
                 updates['pending_amount'] = expected_pending
                 updates['status'] = expected_status
                 record['pending_amount'] = expected_pending
-                record['status'] = expected_status
-
         if updates:
             updates['updated_at'] = datetime.utcnow()
             db.fees.update_one({'_id': record['_id']}, {'$set': updates})

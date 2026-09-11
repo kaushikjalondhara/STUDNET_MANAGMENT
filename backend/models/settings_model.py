@@ -379,12 +379,33 @@ def update_school_settings(category: str, data: dict) -> dict:
                     student_ids = [s['_id'] for s in std_students]
                     
                     if student_ids:
+                        # Calculate effective total fee with late fee if applicable
+                        current_due_date = cfg.get('due_date', '2026-10-31')
+                        try:
+                            from datetime import datetime, date
+                            due_date_obj = datetime.strptime(current_due_date, '%Y-%m-%d').date()
+                        except:
+                            from datetime import date
+                            due_date_obj = date(2026, 10, 31)
+                            
+                        today = datetime.utcnow().date()
+                        is_late = today > due_date_obj
+                        late_fee_amt = float(cfg.get('late_fee', 0)) if is_late else 0.0
+                        
+                        effective_total_fee = new_tot + late_fee_amt
+                        base_breakdown = list(cfg.get('breakdown', []))
+                        if is_late and late_fee_amt > 0:
+                            base_breakdown.append({
+                                'head': 'Late Fee',
+                                'amount': late_fee_amt
+                            })
+
                         # Fetch all fee records for these students in ONE query (N+1 query fix)
                         fees_records = list(db.fees.find({'student_id': {'$in': student_ids}}))
                         
                         for s_record in fees_records:
                             paid = float(s_record.get('paid_amount', 0))
-                            new_pnd = max(0.0, new_tot - paid)
+                            new_pnd = max(0.0, effective_total_fee - paid)
                             new_st = 'Paid' if new_pnd <= 0 else ('Partial' if paid > 0 else 'Unpaid')
                             
                             bulk_ops.append(
@@ -392,10 +413,10 @@ def update_school_settings(category: str, data: dict) -> dict:
                                     {'_id': s_record['_id']},
                                     {
                                         '$set': {
-                                            'total_fee': new_tot,
+                                            'total_fee': effective_total_fee,
                                             'pending_amount': new_pnd,
                                             'status': new_st,
-                                            'breakdown': cfg.get('breakdown', []),
+                                            'breakdown': base_breakdown,
                                             'updated_at': datetime.utcnow()
                                         }
                                     }
