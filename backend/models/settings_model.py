@@ -382,11 +382,9 @@ def update_school_settings(category: str, data: dict) -> dict:
                         # Calculate effective total fee with late fee if applicable
                         current_due_date = cfg.get('due_date', '2026-10-31')
                         try:
-                            from datetime import datetime, date
                             due_date_obj = datetime.strptime(current_due_date, '%Y-%m-%d').date()
                         except:
-                            from datetime import date
-                            due_date_obj = date(2026, 10, 31)
+                            due_date_obj = datetime(2026, 10, 31).date()
                             
                         today = datetime.utcnow().date()
                         is_late = today > due_date_obj
