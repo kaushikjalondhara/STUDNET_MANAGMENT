@@ -81,7 +81,12 @@ def get_public_school_info():
 def update_category(category):
     # Check management token in header or body
     mgmt_token = request.headers.get('X-Management-Token') or (request.get_json(silent=True) or {}).get('management_token')
+    print(f"  [Settings Update] Category: {category}")
+    print(f"  [Settings Update] X-Management-Token header: {request.headers.get('X-Management-Token')}")
+    print(f"  [Settings Update] Parsed mgmt_token: {mgmt_token}")
+    
     if not is_valid_management_token(mgmt_token):
+        print(f"  [Settings Update] ❌ Invalid management token!")
         return jsonify({'success': False, 'error': 'Management authorization required. Please verify management password.'}), 403
 
     data = request.get_json(silent=True) or {}

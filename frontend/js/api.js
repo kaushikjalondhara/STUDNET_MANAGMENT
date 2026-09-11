@@ -250,7 +250,10 @@ const Api = {
     return this.get('/settings');
   },
   updateSchoolSettings(category, data) {
-    return this.put(`/settings/${category}`, data);
+    const payload = { ...data };
+    const mgmt = sessionStorage.getItem('sms_mgmt_token');
+    if (mgmt) payload.management_token = mgmt;
+    return this.put(`/settings/${category}`, payload);
   },
   getPublicSchoolInfo() {
     return this.get('/settings/public');
@@ -259,10 +262,16 @@ const Api = {
     return this.get(`/settings/hall-ticket/${standard}`);
   },
   updateHallTicketConfig(standard, data) {
-    return this.put(`/settings/hall-ticket/${standard}`, data);
+    const payload = { ...data };
+    const mgmt = sessionStorage.getItem('sms_mgmt_token');
+    if (mgmt) payload.management_token = mgmt;
+    return this.put(`/settings/hall-ticket/${standard}`, payload);
   },
   copyHallTicketConfig(sourceStandard) {
-    return this.post('/settings/hall-ticket/copy-all', { source_standard: sourceStandard });
+    const payload = { source_standard: sourceStandard };
+    const mgmt = sessionStorage.getItem('sms_mgmt_token');
+    if (mgmt) payload.management_token = mgmt;
+    return this.post('/settings/hall-ticket/copy-all', payload);
   },
 
   // ─── File Download & Bulk Import Helpers ──────────────────────────────────

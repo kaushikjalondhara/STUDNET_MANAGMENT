@@ -40,7 +40,7 @@ def verify_management_password(password: str) -> tuple[bool, str]:
     """
     db = get_db()
     init_management_auth()
-    doc = db.management_auth.find_one({})
+    doc = db.management_auth.find_one({}, sort=[('updated_at', -1)])
     if not doc:
         return False, 'Management account not found.'
 
@@ -108,7 +108,8 @@ def is_valid_management_token(token: str) -> bool:
     if not token:
         return False
     db = get_db()
-    doc = db.management_auth.find_one({})
+    # Sort by updated_at DESC to always get the most recently updated auth document
+    doc = db.management_auth.find_one({}, sort=[('updated_at', -1)])
     if not doc:
         return False
     now = datetime.utcnow()
@@ -124,7 +125,7 @@ def change_management_password(old_password: str, new_password: str) -> tuple[bo
 
     db = get_db()
     init_management_auth()
-    doc = db.management_auth.find_one({})
+    doc = db.management_auth.find_one({}, sort=[('updated_at', -1)])
     if not doc:
         return False, 'Management record not found.'
 
