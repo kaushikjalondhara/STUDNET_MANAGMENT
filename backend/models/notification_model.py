@@ -1,6 +1,9 @@
 from database.db import get_db
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+
+# Indian Standard Time = UTC + 5:30
+IST = timezone(timedelta(hours=5, minutes=30))
 
 def serialize(doc) -> dict:
     if doc is None:
@@ -13,9 +16,11 @@ def serialize(doc) -> dict:
     if 'read_by' in doc and isinstance(doc['read_by'], list):
         doc['read_by'] = [str(x) for x in doc['read_by']]
     if 'created_at' in doc and isinstance(doc['created_at'], datetime):
-        doc['date_formatted'] = doc['created_at'].strftime("%d-%m-%Y")
-        doc['datetime_formatted'] = doc['created_at'].strftime("%d-%m-%Y %I:%M %p")
-        doc['created_at'] = doc['created_at'].isoformat()
+        # Convert UTC → IST for display
+        ist_time = doc['created_at'].replace(tzinfo=timezone.utc).astimezone(IST)
+        doc['date_formatted'] = ist_time.strftime("%d-%m-%Y")
+        doc['datetime_formatted'] = ist_time.strftime("%d-%m-%Y %I:%M %p")
+        doc['created_at'] = ist_time.isoformat()
     return doc
 
 def create_notification(type_name: str, title: str, message: str, standard: int = None, student_id: str = None, link: str = None) -> dict:
