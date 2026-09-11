@@ -454,11 +454,17 @@ def is_notification_enabled(notification_type: str) -> bool:
             'fee': 'fee_reminder',
             'fee_reminder': 'fee_reminder',
             'payment': 'payment',
-            'receipt': 'receipt'
+            'receipt': 'receipt',
+            'general': 'general'
         }
         key = mapping.get(notification_type.lower(), notification_type.lower())
-        return bool(notifs.get(key, True))
-    except Exception:
+        # Default to True for unknown/unmapped types (like 'general')
+        enabled = bool(notifs.get(key, True))
+        if not enabled:
+            print(f"  ⚠️ Notification type '{notification_type}' (key='{key}') is DISABLED in School Settings")
+        return enabled
+    except Exception as e:
+        print(f"  ⚠️ is_notification_enabled error: {e} — defaulting to True")
         return True
 
 # ─── Standard-wise Hall Ticket Configuration ─────────────────────────────────

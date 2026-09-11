@@ -30,9 +30,10 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
     try:
         from models.settings_model import is_notification_enabled
         if not is_notification_enabled(type_name):
+            print(f"  ⚠️ Notification SUPPRESSED: type={type_name}, title={title} (disabled in School Settings)")
             return {'status': 'suppressed', 'reason': f'Notifications for {type_name} are disabled in School Settings.'}
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"  ⚠️ Notification settings check failed: {e} (allowing notification)")
 
     valid_sid = None
     if student_id:
@@ -61,6 +62,7 @@ def create_notification(type_name: str, title: str, message: str, standard: int 
         'created_at': datetime.utcnow()
     }
     res = db.notifications.insert_one(doc)
+    print(f"  🔔 Notification CREATED: type={type_name}, std={std_val}, sid={valid_sid}, title={title[:50]}")
     return serialize(db.notifications.find_one({'_id': res.inserted_id}))
 
 def _build_student_query(student_id: str, standard: int) -> dict:
@@ -76,18 +78,31 @@ def _build_student_query(student_id: str, standard: int) -> dict:
 
     str_sid = str(student_id)
 
+    # Condition for broadcast notifications (student_id is null/missing/empty)
+    broadcast_sid_check = {'$or': [
+        {'student_id': None},
+        {'student_id': {'$exists': False}},
+        {'student_id': ''},
+        {'student_id': False}
+    ]}
+
+    # Standard matching: match student's standard, or global (0/null/missing)
+    std_match = {'$or': [
+        {'standard': std_num},
+        {'standard': str(std_num)},
+        {'standard': 0},
+        {'standard': '0'},
+        {'standard': None},
+        {'standard': {'$exists': False}}
+    ]}
+
     return {
         '$or': [
+            # Personal notifications for this student (by ObjectId or string)
             {'student_id': sid},
             {'student_id': str_sid},
-            {
-                'student_id': {'$in': [None, '', False]},
-                'standard': {'$in': [std_num, str(std_num), 0, '0', None]}
-            },
-            {
-                'student_id': {'$in': [None, '', False]},
-                'standard': {'$exists': False}
-            }
+            # Broadcast notifications for this student's standard or all standards
+            {'$and': [broadcast_sid_check, std_match]}
         ]
     }
 
@@ -159,37 +174,27 @@ def mark_all_notifications_read(student_id: str, standard: int) -> int:
 def get_unread_count(student_id: str, standard: int) -> int:
     db = get_db()
     str_sid = str(student_id)
-    try:
-        sid = ObjectId(student_id)
-    except Exception:
-        sid = str_sid
-    try:
-        std_num = int(standard)
-    except Exception:
-        std_num = 1
+
+    # Reuse the same query builder for consistency
+    base_query = _build_student_query(student_id, standard)
+
+    # Broadcast notification check: student_id is null/missing/empty
+    broadcast_sid_check = {'$or': [
+        {'student_id': None},
+        {'student_id': {'$exists': False}},
+        {'student_id': ''},
+        {'student_id': False}
+    ]}
 
     query = {
         '$and': [
-            {
-                '$or': [
-                    {'student_id': sid},
-                    {'student_id': str_sid},
-                    {
-                        'student_id': {'$in': [None, '', False]},
-                        'standard': {'$in': [std_num, str(std_num), 0, '0', None]}
-                    },
-                    {
-                        'student_id': {'$in': [None, '', False]},
-                        'standard': {'$exists': False}
-                    }
-                ]
-            },
+            base_query,
             {
                 'read_by': {'$ne': str_sid}
             },
             {
                 '$or': [
-                    {'student_id': {'$in': [None, '', False]}},
+                    broadcast_sid_check,
                     {'read': {'$ne': True}}
                 ]
             }

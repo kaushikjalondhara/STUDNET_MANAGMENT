@@ -17,6 +17,7 @@ def my_notifications():
     
     notifications = get_student_notifications(student_id, standard)
     unread = get_unread_count(student_id, standard)
+    print(f"  📋 Notifications query: student_id={student_id}, standard={standard}, found={len(notifications)}, unread={unread}")
     return jsonify({
         'success': True,
         'notifications': notifications,
