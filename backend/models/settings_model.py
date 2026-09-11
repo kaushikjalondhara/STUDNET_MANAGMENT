@@ -365,32 +365,45 @@ def update_school_settings(category: str, data: dict) -> dict:
 
         # Sync standard fee rates to all student fee records
         if 'standard_fees' in fee_data and isinstance(fee_data['standard_fees'], dict):
+            from pymongo import UpdateOne
+            bulk_ops = []
+            
             for std_str, fee_val in fee_data['standard_fees'].items():
                 try:
                     std_num = int(std_str)
                     new_tot = float(fee_val)
                     cfg = get_standard_fee_config(std_num)
                     std_students = list(db.students.find({'standard': std_num}))
+                    
                     for s in std_students:
                         s_record = db.fees.find_one({'student_id': s['_id']})
                         if s_record:
                             paid = float(s_record.get('paid_amount', 0))
                             new_pnd = max(0.0, new_tot - paid)
                             new_st = 'Paid' if new_pnd <= 0 else ('Partial' if paid > 0 else 'Unpaid')
-                            db.fees.update_one(
-                                {'_id': s_record['_id']},
-                                {
-                                    '$set': {
-                                        'total_fee': new_tot,
-                                        'pending_amount': new_pnd,
-                                        'status': new_st,
-                                        'breakdown': cfg.get('breakdown', []),
-                                        'updated_at': datetime.utcnow()
+                            
+                            bulk_ops.append(
+                                UpdateOne(
+                                    {'_id': s_record['_id']},
+                                    {
+                                        '$set': {
+                                            'total_fee': new_tot,
+                                            'pending_amount': new_pnd,
+                                            'status': new_st,
+                                            'breakdown': cfg.get('breakdown', []),
+                                            'updated_at': datetime.utcnow()
+                                        }
                                     }
-                                }
+                                )
                             )
                 except Exception as e:
                     print(f"Error syncing standard {std_str} fee:", e)
+                    
+            if bulk_ops:
+                try:
+                    db.fees.bulk_write(bulk_ops, ordered=False)
+                except Exception as e:
+                    print("Error during bulk write of fees:", e)
 
     if category in ('school_info', 'all'):
         info_data = data if category == 'school_info' else data.get('school_info', {})
