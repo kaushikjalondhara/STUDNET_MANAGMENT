@@ -14,12 +14,15 @@ def serialize(doc) -> dict:
         doc['created_at'] = doc['created_at'].isoformat()
     return doc
 
-def get_notices(standard: int = None) -> list:
+def get_notices(standard: int = None, student_id: str = None) -> list:
     db = get_db()
     # If standard is specified, match standard OR 0 (all standards)
     query = {}
     if standard is not None:
-        query = {'$or': [{'standard': int(standard)}, {'standard': 0}]}
+        query['$or'] = [{'standard': int(standard)}, {'standard': 0}]
+    
+    if student_id:
+        query['hidden_by'] = {'$ne': str(student_id)}
     
     records = list(db.notices.find(query).sort('created_at', -1))
     return [serialize(r) for r in records]
@@ -48,3 +51,12 @@ def delete_notice(notice_id: str) -> bool:
         return False
     res = db.notices.delete_one({'_id': oid})
     return res.deleted_count > 0
+
+def hide_notice_for_student(notice_id: str, student_id: str) -> bool:
+    db = get_db()
+    try:
+        oid = ObjectId(notice_id)
+    except Exception:
+        return False
+    res = db.notices.update_one({'_id': oid}, {'$addToSet': {'hidden_by': str(student_id)}})
+    return res.modified_count > 0

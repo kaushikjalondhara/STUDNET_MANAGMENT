@@ -68,11 +68,21 @@ def send_notification():
     return jsonify({'success': True, 'notification': notif, 'message': 'Notification sent successfully.'}), 201
 
 @notification_bp.route('/<id>', methods=['DELETE'])
-@student_required
+@jwt_required()
 def delete_one(id):
-    from models.notification_model import delete_notification
-    deleted = delete_notification(id)
-    if deleted:
-        return jsonify({'success': True, 'message': 'Notification deleted.'})
-    return jsonify({'success': False, 'error': 'Not found.'}), 404
+    claims = get_jwt()
+    if claims.get('role') == 'student':
+        from flask_jwt_extended import get_jwt_identity
+        from models.notification_model import hide_notification_for_student
+        student_id = get_jwt_identity()
+        hidden = hide_notification_for_student(id, student_id)
+        if hidden:
+            return jsonify({'success': True, 'message': 'Notification hidden.'})
+        return jsonify({'success': False, 'error': 'Not found.'}), 404
+    else:
+        from models.notification_model import delete_notification
+        deleted = delete_notification(id)
+        if deleted:
+            return jsonify({'success': True, 'message': 'Notification deleted.'})
+        return jsonify({'success': False, 'error': 'Not found.'}), 404
 

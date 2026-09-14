@@ -8,12 +8,18 @@ notice_bp = Blueprint('notices', __name__)
 @notice_bp.route('', methods=['GET'])
 @jwt_required()
 def list_notices():
+    from flask_jwt_extended import get_jwt_identity
     claims = get_jwt()
     standard = request.args.get('standard')
-    if not standard and claims.get('role') == 'student':
-        standard = claims.get('standard')
+    role = claims.get('role')
     
-    notices = get_notices(standard)
+    student_id = None
+    if role == 'student':
+        if not standard:
+            standard = claims.get('standard')
+        student_id = get_jwt_identity()
+    
+    notices = get_notices(standard, student_id)
     return jsonify({'success': True, 'notices': notices, 'count': len(notices)})
 
 @notice_bp.route('', methods=['POST'])
@@ -45,6 +51,15 @@ def add_notice():
 @notice_bp.route('/<notice_id>', methods=['DELETE'])
 @jwt_required()
 def remove_notice(notice_id):
-    if not delete_notice(notice_id):
-        return jsonify({'success': False, 'error': 'Notice not found.'}), 404
-    return jsonify({'success': True, 'message': 'Notice deleted successfully.'})
+    from flask_jwt_extended import get_jwt_identity
+    from models.notice_model import hide_notice_for_student
+    claims = get_jwt()
+    if claims.get('role') == 'student':
+        student_id = get_jwt_identity()
+        if not hide_notice_for_student(notice_id, student_id):
+            return jsonify({'success': False, 'error': 'Notice not found.'}), 404
+        return jsonify({'success': True, 'message': 'Notice hidden successfully.'})
+    else:
+        if not delete_notice(notice_id):
+            return jsonify({'success': False, 'error': 'Notice not found.'}), 404
+        return jsonify({'success': True, 'message': 'Notice deleted successfully.'})

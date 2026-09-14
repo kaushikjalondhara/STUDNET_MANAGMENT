@@ -102,12 +102,17 @@ def _build_student_query(student_id: str, standard: int) -> dict:
     ]}
 
     return {
-        '$or': [
-            # Personal notifications for this student (by ObjectId or string)
-            {'student_id': sid},
-            {'student_id': str_sid},
-            # Broadcast notifications for this student's standard or all standards
-            {'$and': [broadcast_sid_check, std_match]}
+        '$and': [
+            {
+                '$or': [
+                    # Personal notifications for this student (by ObjectId or string)
+                    {'student_id': sid},
+                    {'student_id': str_sid},
+                    # Broadcast notifications for this student's standard or all standards
+                    {'$and': [broadcast_sid_check, std_match]}
+                ]
+            },
+            {'hidden_by': {'$ne': str_sid}}
         ]
     }
 
@@ -242,3 +247,12 @@ def delete_notification(notification_id: str) -> bool:
         return False
     res = db.notifications.delete_one({'_id': oid})
     return res.deleted_count > 0
+
+def hide_notification_for_student(notification_id: str, student_id: str) -> bool:
+    db = get_db()
+    try:
+        oid = ObjectId(notification_id)
+    except Exception:
+        return False
+    res = db.notifications.update_one({'_id': oid}, {'$addToSet': {'hidden_by': str(student_id)}})
+    return res.modified_count > 0
