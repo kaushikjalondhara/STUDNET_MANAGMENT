@@ -69,6 +69,7 @@
                 <th>Status</th>
                 <th>Teacher Remark</th>
                 <th>Submitted On</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody id="myLeavesBody">
@@ -143,6 +144,9 @@
           <td><span class="badge ${badgeClass}">${l.status}</span></td>
           <td>${l.admin_remark || '—'}</td>
           <td style="color:#94A3B8;font-size:12px">${dateStr}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="deleteLeave('${l._id}')" style="padding:4px 8px;font-size:12px;" title="Delete Leave">🗑️</button>
+          </td>
         </tr>
       `;
     }).join('');
@@ -172,6 +176,17 @@
       loadMyLeaves();
     } else {
       Toast.error(data.error || 'Failed to submit leave.');
+    }
+  }
+
+  async function deleteLeave(id) {
+    if (!confirm('Are you sure you want to delete this leave request?')) return;
+    const { ok } = await Api.deleteLeave(id);
+    if (ok) {
+      Toast.success('Leave deleted successfully.');
+      loadMyLeaves();
+    } else {
+      Toast.error('Failed to delete leave.');
     }
   }
 </script>

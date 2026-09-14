@@ -71,3 +71,12 @@ def update_leave_status(leave_id: str, status: str, remark: str = '') -> dict:
         {'$set': {'status': status, 'admin_remark': remark, 'updated_at': datetime.utcnow()}}
     )
     return serialize(db.leaves.find_one({'_id': ObjectId(leave_id)}))
+
+def delete_leave(leave_id: str) -> bool:
+    db = get_db()
+    try:
+        oid = ObjectId(leave_id)
+    except Exception:
+        return False
+    res = db.leaves.delete_one({'_id': oid})
+    return res.deleted_count > 0

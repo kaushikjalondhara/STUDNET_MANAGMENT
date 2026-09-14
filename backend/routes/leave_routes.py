@@ -66,3 +66,14 @@ def change_leave_status(leave_id):
     )
 
     return jsonify({'success': True, 'leave': updated, 'message': f'Leave status marked as {status}.'})
+
+from flask_jwt_extended import jwt_required
+
+@leave_bp.route('/<leave_id>', methods=['DELETE'])
+@jwt_required()
+def delete_leave_record(leave_id):
+    from models.leave_model import delete_leave
+    deleted = delete_leave(leave_id)
+    if deleted:
+        return jsonify({'success': True, 'message': 'Leave deleted successfully.'})
+    return jsonify({'success': False, 'error': 'Leave record not found.'}), 404

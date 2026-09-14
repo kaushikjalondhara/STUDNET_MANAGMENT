@@ -43,7 +43,7 @@ def add_notice():
     return jsonify({'success': True, 'notice': notice}), 201
 
 @notice_bp.route('/<notice_id>', methods=['DELETE'])
-@teacher_required
+@jwt_required()
 def remove_notice(notice_id):
     if not delete_notice(notice_id):
         return jsonify({'success': False, 'error': 'Notice not found.'}), 404

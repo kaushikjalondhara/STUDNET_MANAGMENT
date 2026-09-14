@@ -233,3 +233,12 @@ def sync_missing_notice_notifications():
                 db.notifications.insert_one(doc)
     except Exception as e:
         print("sync_missing_notice_notifications error:", e)
+
+def delete_notification(notification_id: str) -> bool:
+    db = get_db()
+    try:
+        oid = ObjectId(notification_id)
+    except Exception:
+        return False
+    res = db.notifications.delete_one({'_id': oid})
+    return res.deleted_count > 0

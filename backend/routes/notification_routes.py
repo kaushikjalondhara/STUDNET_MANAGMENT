@@ -66,3 +66,13 @@ def send_notification():
 
     notif = create_notification(type_name, title, message, standard, student_id, link)
     return jsonify({'success': True, 'notification': notif, 'message': 'Notification sent successfully.'}), 201
+
+@notification_bp.route('/<id>', methods=['DELETE'])
+@student_required
+def delete_one(id):
+    from models.notification_model import delete_notification
+    deleted = delete_notification(id)
+    if deleted:
+        return jsonify({'success': True, 'message': 'Notification deleted.'})
+    return jsonify({'success': False, 'error': 'Not found.'}), 404
+

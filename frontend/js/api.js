@@ -172,6 +172,9 @@ const Api = {
   updateLeaveStatus(id, status, remark) {
     return this.put(`/leaves/${id}/status`, { status, remark });
   },
+  deleteLeave(id) {
+    return this.delete(`/leaves/${id}`);
+  },
 
   // Notifications
   getMyNotifications() {
@@ -188,6 +191,9 @@ const Api = {
   },
   sendNotification(data) {
     return this.post('/notifications/send', data);
+  },
+  deleteNotification(id) {
+    return this.delete(`/notifications/${id}`);
   },
 
   // Fees

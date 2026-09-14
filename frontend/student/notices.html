@@ -110,6 +110,7 @@
                 <span class="badge badge-gray">${n.standard_label || 'All Standards'}</span>
                 <h3 style="font-size:18px;font-weight:800;color:#1E293B;margin-top:8px;word-break:break-word">${n.title}</h3>
               </div>
+              <button class="btn btn-danger btn-sm" onclick="deleteNotice('${n._id}')" style="min-height:38px">🗑️ Delete</button>
             </div>
             <p style="color:#475569;font-size:14px;line-height:1.6;margin:10px 0;word-break:break-word">${n.description}</p>
             <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12px;color:#475569;border-top:1px solid #F1F5F9;padding-top:10px">
@@ -120,6 +121,17 @@
         </div>
       `;
     }).join('');
+  }
+
+  async function deleteNotice(id) {
+    if (!confirm('Are you sure you want to delete this notice?')) return;
+    const { ok } = await Api.deleteNotice(id);
+    if (ok) {
+      Toast.success('Notice deleted.');
+      loadStudentNotices();
+    } else {
+      Toast.error('Failed to delete notice.');
+    }
   }
 </script>
 </body>
