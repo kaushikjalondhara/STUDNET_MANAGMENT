@@ -134,9 +134,10 @@
           <td><span class="badge ${badgeClass}">${l.status}</span></td>
           <td>
             ${isPending ? `
-              <div style="display:flex;gap:6px;flex-wrap:nowrap">
+              <div style="display:flex;gap:6px;flex-wrap:nowrap;align-items:center;">
                 <button class="btn btn-outline btn-sm" onclick="setStatus('${l._id}', 'Approved')" style="min-height:38px;white-space:nowrap">✅ Approve</button>
                 <button class="btn btn-danger btn-sm" onclick="setStatus('${l._id}', 'Rejected')" style="min-height:38px;white-space:nowrap">❌ Reject</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteLeave('${l._id}')" style="padding:4px 8px;font-size:12px;height:38px;" title="Delete Leave">🗑️</button>
               </div>
             ` : `
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:nowrap">
