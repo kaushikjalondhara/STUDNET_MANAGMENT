@@ -111,8 +111,8 @@
 </div>
 
 <div id="toast-container"></div>
-<script src="../js/api.js?v=14"></script>
-<script src="../js/auth.js?v=15"></script>
+<script src="../js/api.js?v=17"></script>
+<script src="../js/auth.js?v=17"></script>
 <script>
   if (Auth.requireStudent()) {
     Auth.populateStudentUI();
@@ -175,17 +175,19 @@
       const dateStr = formatNotifDate(n);
 
       return `
-        <div class="notif-card ${!n.read ? 'unread' : ''}" style="position:relative;">
+        <div class="notif-card ${!n.read ? 'unread' : ''}">
           <div class="notif-icon-box ${type}" onclick="openNotification('${n._id}', '${n.link || ''}')" style="cursor:pointer">${icon}</div>
-          <div style="flex:1;min-width:0" onclick="openNotification('${n._id}', '${n.link || ''}')" style="cursor:pointer">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:4px;margin-bottom:4px">
-              <h4 style="font-size:15px;font-weight:700;color:#1E293B;margin:0;word-break:break-word;padding-right:30px;">${n.title}</h4>
-              <span style="font-size:12px;color:#475569;font-weight:600;background:#F1F5F9;padding:2px 8px;border-radius:4px">📅 ${dateStr}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px;flex-wrap:nowrap;">
+              <h4 style="font-size:15px;font-weight:700;color:#1E293B;margin:0;word-break:break-word;flex:1;" onclick="openNotification('${n._id}', '${n.link || ''}')" style="cursor:pointer">${n.title}</h4>
+              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteNotification('${n._id}')" style="padding:4px 8px;font-size:12px;flex-shrink:0;" title="Delete Notification">🗑️</button>
             </div>
-            <p style="font-size:13px;color:#475569;margin:0 0 6px;word-break:break-word">${n.message}</p>
-            ${n.link ? `<a href="${n.link}" class="btn btn-outline btn-sm" style="display:inline-block;padding:3px 10px;font-size:11px">View Details →</a>` : ''}
+            <div onclick="openNotification('${n._id}', '${n.link || ''}')" style="cursor:pointer">
+              <span style="font-size:12px;color:#475569;font-weight:600;background:#F1F5F9;padding:2px 8px;border-radius:4px;display:inline-block;margin-bottom:6px;">📅 ${dateStr}</span>
+              <p style="font-size:13px;color:#475569;margin:0 0 6px;word-break:break-word">${n.message}</p>
+              ${n.link ? `<a href="${n.link}" class="btn btn-outline btn-sm" style="display:inline-block;padding:3px 10px;font-size:11px">View Details →</a>` : ''}
+            </div>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteNotification('${n._id}')" style="position:absolute;top:16px;right:16px;padding:4px 8px;font-size:12px;" title="Delete Notification">🗑️</button>
         </div>
       `;
     }).join('');
